@@ -32,21 +32,6 @@ const RACE_META: Record<string, { country: string; circuitName: string; raceName
   'Abu Dhabi':           { country: 'United Arab Emirates', circuitName: 'Yas Marina Circuit',            raceName: 'Abu Dhabi Grand Prix' },
 };
 
-// Country code mapping for flag emojis
-const COUNTRY_FLAGS: Record<string, string> = {
-  'Australia': '🇦🇺', 'Bahrain': '🇧🇭', 'Saudi Arabia': '🇸🇦', 'Japan': '🇯🇵',
-  'China': '🇨🇳', 'USA': '🇺🇸', 'United States': '🇺🇸', 'Italy': '🇮🇹',
-  'Monaco': '🇲🇨', 'Canada': '🇨🇦', 'Spain': '🇪🇸', 'Austria': '🇦🇹',
-  'UK': '🇬🇧', 'United Kingdom': '🇬🇧', 'Hungary': '🇭🇺', 'Belgium': '🇧🇪',
-  'Netherlands': '🇳🇱', 'Azerbaijan': '🇦🇿', 'Singapore': '🇸🇬', 'Mexico': '🇲🇽',
-  'Brazil': '🇧🇷', 'United Arab Emirates': '🇦🇪', 'Qatar': '🇶🇦',
-  'Las Vegas': '🇺🇸', 'Miami': '🇺🇸',
-};
-
-export function getFlagForCountry(country: string): string {
-  return COUNTRY_FLAGS[country] ?? '🏁';
-}
-
 // Session label mapping
 const SESSION_LABELS: Record<string, string> = {
   fp1: 'Fri. Træning 1',

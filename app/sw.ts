@@ -36,7 +36,7 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: '🏎️ F1 Reminder', body: event.data.text() };
+    payload = { title: 'F1 Reminder', body: event.data.text() };
   }
 
   const options: NotificationOptions = {

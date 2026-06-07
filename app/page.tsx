@@ -392,7 +392,10 @@ export default function Home() {
             borderRadius: 'var(--radius-sm)', padding: '9px 14px', marginBottom: '14px',
             fontSize: '12px', color: '#c9a800',
           }}>
-            <span>⚠️ Viser gemt data — ingen forbindelse til serveren</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Viser gemt data — ingen forbindelse til serveren
+            </span>
             <button onClick={() => fetchData()} style={{
               background: 'none', border: 'none', color: '#c9a800', fontSize: '12px',
               cursor: 'pointer', fontWeight: 600, padding: '0 0 0 12px',
@@ -477,7 +480,9 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
   if (!race) {
     return (
       <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--f1-muted)' }}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🏁</div>
+        <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
         <p style={{ fontFamily: 'var(--font-display)', fontSize: '14px' }}>Ingen kommende løb</p>
       </div>
     );
@@ -575,8 +580,8 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
                 const lastRaceTime = lastRaceSession ? new Date(lastRaceSession.time) : new Date(lastRace.raceDate + 'T15:00:00Z');
                 const hoursAgo = (now.getTime() - lastRaceTime.getTime()) / (1000 * 60 * 60);
                 const msg = hoursAgo < 4
-                  ? '🏎️ Løbet er sandsynligvis i gang — resultater snart'
-                  : 'ℹ️ Resultater ikke tilgængelige endnu — prøv igen senere';
+                  ? 'Løbet er sandsynligvis i gang — resultater snart'
+                  : 'Resultater ikke tilgængelige endnu — prøv igen senere';
                 return (
                   <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)' }}>
                     {msg}
@@ -698,12 +703,12 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
                     )}
                     {!isLoading && results === 'live_session' && (
                       <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>🏎️</span> Utilgængeligt under aktiv F1-session — prøv igen efter løbet
+                        Utilgængeligt under aktiv F1-session — prøv igen efter løbet
                       </div>
                     )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>ℹ️</span> {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
+                        {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
@@ -729,7 +734,7 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
           padding: '7px 14px', borderRadius: 'var(--radius-pill)',
           fontSize: '12px', fontWeight: 600, color: 'var(--f1-red)',
         }}>
-          ⚡ Sprint-weekend
+          Sprint-weekend
         </div>
       )}
     </div>
@@ -1048,12 +1053,12 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
                     )}
                     {!isLoading && results === 'live_session' && (
                       <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
-                        <span>🏎️</span> Utilgængeligt under aktiv F1-session — prøv igen efter løbet
+                        Utilgængeligt under aktiv F1-session — prøv igen efter løbet
                       </div>
                     )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
-                        <span>ℹ️</span> {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
+                        {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
@@ -1336,7 +1341,8 @@ function getCountryCode(country: string): string | null {
   if (n.includes('canada'))         return 'ca';
   if (n.includes('spain'))          return 'es';
   if (n.includes('austria'))        return 'at';
-  if (n.includes('great britain') || n.includes('united kingdom')) return 'gb';
+  if (n.includes('great britain') || n.includes('united kingdom') || n === 'uk') return 'gb';
+  if (n.includes('qatar'))         return 'qa';
   if (n.includes('belgium'))        return 'be';
   if (n.includes('hungary'))        return 'hu';
   if (n.includes('netherlands'))    return 'nl';

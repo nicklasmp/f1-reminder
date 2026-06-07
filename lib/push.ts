@@ -44,7 +44,7 @@ export async function sendPushNotification(
 
 export function buildWednesdayMessage(raceName: string, country: string): NotificationPayload {
   return {
-    title: '🏎️ F1 i weekenden!',
+    title: 'F1 i weekenden!',
     body: `${raceName} kører denne weekend. Sæt dig til rette!`,
     icon: '/icons/icon-192.png',
     badge: '/icons/badge-96.png',
@@ -59,7 +59,7 @@ export function buildSessionMessage(
   timeStr: string
 ): NotificationPayload {
   return {
-    title: `🏁 ${sessionLabel} starter snart`,
+    title: `${sessionLabel} starter snart`,
     body: `${raceName} — ${sessionLabel} begynder kl. ${timeStr}`,
     icon: '/icons/icon-192.png',
     badge: '/icons/badge-96.png',
