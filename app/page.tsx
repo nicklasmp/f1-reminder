@@ -231,18 +231,21 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
   const [cache, setCache] = useState<Record<string, SessionResults>>({});
   const [loadingSession, setLoadingSession] = useState<string | null>(null);
   const [lastRaceResults, setLastRaceResults] = useState<F1RaceResult[] | null>(null);
+  const [lastRaceLoading, setLastRaceLoading] = useState(true);
 
   const now = new Date();
-  // Hide last race results once the new race weekend's first session begins
+  // Hide once the new race weekend's first session begins
   const weekendStarted = race ? new Date(race.sessions[0]?.time) < now : false;
   const showLastRace = !weekendStarted && !!lastRace;
 
   useEffect(() => {
     if (!showLastRace || !lastRace) return;
+    setLastRaceLoading(true);
     fetch(`/api/results?round=${lastRace.round}&type=race`)
       .then(r => r.json())
       .then(d => setLastRaceResults(d.results ?? null))
-      .catch(() => {});
+      .catch(() => setLastRaceResults(null))
+      .finally(() => setLastRaceLoading(false));
   }, [showLastRace, lastRace?.round]);
 
   if (!race) {
@@ -314,12 +317,17 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
             </div>
           </div>
 
-          {!lastRaceResults && (
+          {lastRaceLoading && (
             <div style={{ padding: '12px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>
               Henter resultater…
             </div>
           )}
-          {lastRaceResults && (
+          {!lastRaceLoading && !lastRaceResults && (
+            <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🏎️</span> Løbet er i gang — resultater kommer snart
+            </div>
+          )}
+          {!lastRaceLoading && lastRaceResults && (
             <SessionResultsList type="race" results={lastRaceResults} />
           )}
         </div>
