@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult } from '@/types/f1';
 import { formatSessionTime, formatSessionDate, getFlagForCountry } from '@/lib/f1-api';
 
@@ -16,6 +16,73 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported'>('idle');
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+
+  // ── Pull-to-refresh ──────────────────────────────────────────────────────────
+  const [pullY, setPullY] = useState(0);
+  const [ptrRefreshing, setPtrRefreshing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const pullYRef = useRef(0);
+  const pullActive = useRef(false);
+  const fetchDataRef = useRef<() => Promise<void>>(async () => {});
+
+  const PTR_THRESHOLD = 65;
+  const PTR_MAX = 82;
+
+  useEffect(() => {
+    fetchDataRef.current = fetchData;
+  });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onStart = (e: TouchEvent) => {
+      if (window.scrollY > 0) return;
+      touchStartY.current = e.touches[0].clientY;
+      pullActive.current = true;
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (!pullActive.current) return;
+      if (window.scrollY > 0) { pullActive.current = false; return; }
+      const delta = e.touches[0].clientY - touchStartY.current;
+      if (delta <= 0) { pullYRef.current = 0; setPullY(0); return; }
+      e.preventDefault();
+      const y = Math.min(delta / 2.2, PTR_MAX);
+      pullYRef.current = y;
+      setPullY(y);
+    };
+
+    const onEnd = () => {
+      if (!pullActive.current) return;
+      pullActive.current = false;
+      const y = pullYRef.current;
+      pullYRef.current = 0;
+      if (y >= PTR_THRESHOLD) {
+        setPtrRefreshing(true);
+        setPullY(PTR_THRESHOLD);
+        fetchDataRef.current().finally(() => {
+          setPtrRefreshing(false);
+          setPullY(0);
+        });
+      } else {
+        setPullY(0);
+      }
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    el.addEventListener('touchcancel', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+    };
+  }, []);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -114,8 +181,51 @@ export default function Home() {
   const pastRaces = schedule.filter(r => getRaceTime(r) < now);
   const lastRace = pastRaces.length > 0 ? pastRaces[pastRaces.length - 1] : null;
 
+  // Pull indicator Y: starts hidden above viewport, slides in as user pulls
+  const indicatorVisible = pullY > 4 || ptrRefreshing;
+  const indicatorTranslateY = ptrRefreshing
+    ? 12
+    : Math.max(-48, pullY - 48);
+  const arrowRotation = Math.min((pullY / PTR_THRESHOLD) * 180, 180);
+  const overThreshold = pullY >= PTR_THRESHOLD;
+
   return (
-    <div style={{ minHeight: '100dvh', background: 'var(--f1-black)', color: 'var(--f1-text)' }}>
+    <div ref={containerRef} style={{ minHeight: '100dvh', background: 'var(--f1-black)', color: 'var(--f1-text)' }}>
+
+      {/* Pull-to-refresh indicator */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: '50%',
+          transform: `translateX(-50%) translateY(${indicatorTranslateY}px)`,
+          transition: (pullY === 0 || ptrRefreshing) ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s' : 'none',
+          opacity: indicatorVisible ? 1 : 0,
+          zIndex: 200,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'var(--f1-card)',
+          border: '1px solid var(--f1-border-light)',
+          borderRadius: '999px',
+          padding: '7px 16px 7px 12px',
+          fontSize: '12px',
+          fontFamily: 'var(--font-body)',
+          color: overThreshold || ptrRefreshing ? 'var(--f1-text)' : 'var(--f1-muted)',
+          pointerEvents: 'none',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        }}
+      >
+        {ptrRefreshing
+          ? <span className="ptr-spinner" />
+          : <span className="ptr-arrow" style={{ transform: `rotate(${arrowRotation}deg)` }}>↓</span>
+        }
+        {ptrRefreshing
+          ? 'Opdaterer…'
+          : overThreshold ? 'Slip for at opdatere' : 'Træk for at opdatere'
+        }
+      </div>
 
       {/* Header */}
       <header style={{ background: 'var(--f1-dark)', borderBottom: '1px solid var(--f1-border)' }}>

@@ -46,3 +46,30 @@ html, body {
 .session-next {
   animation: pulse-glow 2.5s ease-in-out infinite;
 }
+
+@keyframes ptr-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.ptr-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--f1-border-light);
+  border-top-color: var(--f1-red);
+  border-radius: 50%;
+  animation: ptr-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.ptr-arrow {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--f1-muted-light);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
