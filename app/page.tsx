@@ -626,7 +626,7 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2.2rem', lineHeight: 1, color: '#fff' }}>
                 {daysUntil}
               </div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 500, marginTop: '3px', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '11px', color: '#fff', fontWeight: 700, marginTop: '3px', whiteSpace: 'nowrap' }}>
                 {daysUntil === 1 ? 'dag til race' : 'dage til race'}
               </div>
             </div>
@@ -1226,7 +1226,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
                   {s.constructor.name}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '2px' }}>
-                  {s.constructor.nationality}
+                  {translateNationality(s.constructor.nationality)}
                 </div>
               </div>
 
@@ -1330,31 +1330,44 @@ function TeamBadge({ name }: { name: string }) {
   );
 }
 
-/** ISO 3166-1 alpha-2 code for a race-hosting country name */
+/** ISO 3166-1 alpha-2 code for a race-hosting country name (handles both Danish and English) */
 function getCountryCode(country: string): string | null {
   const n = country.toLowerCase();
-  if (n.includes('australia'))      return 'au';
-  if (n.includes('bahrain'))        return 'bh';
-  if (n.includes('saudi'))          return 'sa';
-  if (n.includes('japan'))          return 'jp';
-  if (n.includes('china'))          return 'cn';
-  if (n.includes('monaco'))         return 'mc';
-  if (n.includes('canada'))         return 'ca';
-  if (n.includes('spain'))          return 'es';
-  if (n.includes('austria'))        return 'at';
-  if (n.includes('great britain') || n.includes('united kingdom') || n === 'uk') return 'gb';
-  if (n.includes('qatar'))         return 'qa';
-  if (n.includes('belgium'))        return 'be';
-  if (n.includes('hungary'))        return 'hu';
-  if (n.includes('netherlands'))    return 'nl';
-  if (n.includes('italy'))          return 'it';
-  if (n.includes('azerbaijan'))     return 'az';
-  if (n.includes('singapore'))      return 'sg';
-  if (n.includes('brazil'))         return 'br';
-  if (n.includes('mexico'))         return 'mx';
-  if (n.includes('abu dhabi') || n.includes('united arab')) return 'ae';
-  if (n.includes('united states') || n.includes('usa') || n.includes('miami') || n.includes('las vegas')) return 'us';
+  if (n.includes('australien') || n.includes('australia'))           return 'au';
+  if (n.includes('bahrain'))                                          return 'bh';
+  if (n.includes('saudi'))                                            return 'sa';
+  if (n.includes('japan'))                                            return 'jp';
+  if (n.includes('kina') || n.includes('china'))                     return 'cn';
+  if (n.includes('monaco'))                                           return 'mc';
+  if (n.includes('canada'))                                           return 'ca';
+  if (n.includes('spanien') || n.includes('spain'))                  return 'es';
+  if (n.includes('østrig') || n.includes('austria'))                 return 'at';
+  if (n.includes('storbritan') || n.includes('great brit') || n === 'uk') return 'gb';
+  if (n.includes('belgien') || n.includes('belgium'))                return 'be';
+  if (n.includes('ungarn') || n.includes('hungary'))                 return 'hu';
+  if (n.includes('holland') || n.includes('netherlands'))            return 'nl';
+  if (n.includes('italien') || n.includes('italy'))                  return 'it';
+  if (n.includes('aserbajdsjan') || n.includes('azerbaijan'))        return 'az';
+  if (n.includes('singapore'))                                        return 'sg';
+  if (n.includes('brasilien') || n.includes('brazil'))               return 'br';
+  if (n.includes('mexico'))                                           return 'mx';
+  if (n.includes('qatar'))                                            return 'qa';
+  if (n.includes('abu dhabi') || n.includes('united arab'))          return 'ae';
+  if (n.includes('usa') || n.includes('united states') || n.includes('miami') || n.includes('las vegas')) return 'us';
   return null;
+}
+
+/** Translate Jolpica English nationality strings to Danish */
+function translateNationality(nat: string): string {
+  const map: Record<string, string> = {
+    'German': 'Tysk', 'Italian': 'Italiensk', 'British': 'Britisk',
+    'Austrian': 'Østrigsk', 'French': 'Fransk', 'American': 'Amerikansk',
+    'Brazilian': 'Brasiliansk', 'Dutch': 'Hollandsk', 'Spanish': 'Spansk',
+    'Finnish': 'Finsk', 'Mexican': 'Mexicansk', 'Canadian': 'Canadisk',
+    'Australian': 'Australsk', 'Japanese': 'Japansk', 'Chinese': 'Kinesisk',
+    'Monegasque': 'Monegaskisk', 'Belgian': 'Belgisk', 'Swiss': 'Schweizisk',
+  };
+  return map[nat] ?? nat;
 }
 
 function CountryFlag({ country, size = 20 }: { country: string; size?: number }) {
