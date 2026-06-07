@@ -2,18 +2,24 @@ import { NextResponse } from 'next/server';
 import { fetchDriverStandings, fetchConstructorStandings } from '@/lib/f1-api';
 import { F1DriverStanding } from '@/types/f1';
 
-async function fetchDriverImage(givenName: string, familyName: string): Promise<string | null> {
+/** Fetch a Wikipedia headshot using the driver's own Wikipedia URL (avoids disambiguation issues) */
+async function fetchDriverImage(wikiUrl: string): Promise<string | null> {
   try {
-    const title = [...givenName.split(' '), familyName].join('_');
+    // Extract page title from URL, e.g. "George_Russell_(racing_driver)"
+    const title = decodeURIComponent(wikiUrl.split('/wiki/')[1] ?? '');
+    if (!title) return null;
+
     const res = await fetch(
       `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
-      { next: { revalidate: 86400 } } // cache 24h
+      { next: { revalidate: 86400 } }
     );
     if (!res.ok) return null;
+
     const data = await res.json();
     const src: string | undefined = data?.thumbnail?.source;
     if (!src) return null;
-    // Downscale to 80px (Wikipedia serves any width via URL substitution)
+
+    // Downscale to 80px via Wikipedia's thumbnail URL pattern
     return src.replace(/\/\d+px-/, '/80px-');
   } catch {
     return null;
@@ -27,11 +33,11 @@ export async function GET() {
       fetchConstructorStandings('current'),
     ]);
 
-    // Enrich each driver with a Wikipedia headshot
+    // Enrich each driver with a Wikipedia headshot (parallel, cached 24 h)
     const drivers: F1DriverStanding[] = await Promise.all(
       rawDrivers.map(async (s) => ({
         ...s,
-        imageUrl: await fetchDriverImage(s.driver.givenName, s.driver.familyName),
+        imageUrl: await fetchDriverImage((s.driver as unknown as Record<string, string>).url ?? ''),
       }))
     );
 
