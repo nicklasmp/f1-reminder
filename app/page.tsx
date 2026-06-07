@@ -553,11 +553,19 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
               Henter resultater…
             </div>
           )}
-          {!lastRaceLoading && !lastRaceResults && (
-            <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🏎️</span> Løbet er i gang — resultater kommer snart
-            </div>
-          )}
+          {!lastRaceLoading && !lastRaceResults && (() => {
+            const lastRaceSession = lastRace.sessions.find(s => s.type === 'race');
+            const lastRaceTime = lastRaceSession ? new Date(lastRaceSession.time) : new Date(lastRace.raceDate + 'T15:00:00Z');
+            const hoursAgo = (now.getTime() - lastRaceTime.getTime()) / (1000 * 60 * 60);
+            const msg = hoursAgo < 4
+              ? '🏎️ Løbet er sandsynligvis i gang — resultater snart'
+              : 'ℹ️ Resultater ikke tilgængelige endnu — prøv igen senere';
+            return (
+              <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)' }}>
+                {msg}
+              </div>
+            );
+          })()}
           {!lastRaceLoading && lastRaceResults && (
             <SessionResultsList type="race" results={lastRaceResults} />
           )}
@@ -603,11 +611,6 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
         </div>
 
         <div style={{ borderTop: '1px solid var(--f1-border)' }}>
-          <div style={{ padding: '8px 22px', borderBottom: '1px solid var(--f1-border)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px' }}>📺</span>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--f1-muted)', letterSpacing: '0.04em' }}>TV-tider · dansk tid</span>
-          </div>
-
           {race.sessions.map((session) => {
             const sessionTime = new Date(session.time);
             const isPast = sessionTime < now;
