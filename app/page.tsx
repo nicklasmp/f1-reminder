@@ -337,13 +337,13 @@ export default function Home() {
         <div style={{ maxWidth: '680px', margin: '0 auto', display: 'flex' }}>
           {([
             { tab: 'next',      label: 'Næste',      icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
             )},
             { tab: 'calendar',  label: 'Kalender',   icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -351,7 +351,7 @@ export default function Home() {
               </svg>
             )},
             { tab: 'standings', label: 'Klassement', icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="20" x2="18" y2="10" />
                 <line x1="12" y1="20" x2="12" y2="4" />
                 <line x1="6"  y1="20" x2="6"  y2="14" />
@@ -365,16 +365,15 @@ export default function Home() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 gap: '4px',
                 padding: '10px 0 12px',
-                background: active ? 'var(--f1-red)' : 'none',
+                background: 'none',
                 border: 'none', cursor: 'pointer',
-                transition: 'background 0.15s',
               }}>
                 {icon(active)}
                 <span style={{
                   fontSize: '10px',
                   fontFamily: 'var(--font-body)',
                   fontWeight: active ? 600 : 400,
-                  color: active ? '#ffffff' : 'var(--f1-muted)',
+                  color: active ? 'var(--f1-text)' : 'var(--f1-muted)',
                   letterSpacing: '0.02em',
                 }}>
                   {label}
@@ -856,9 +855,9 @@ function CalendarTab({ upcoming, past, expanded, onToggle }: {
               fontSize: '12px',
               letterSpacing: '0.02em',
               transition: 'background 0.15s, color 0.15s',
-              background: view === key ? 'var(--f1-card-raised)' : 'transparent',
-              color: view === key ? 'var(--f1-text)' : 'var(--f1-muted)',
-              boxShadow: view === key ? '0 1px 3px rgba(0,0,0,0.4)' : 'none',
+              background: view === key ? 'var(--f1-red)' : 'transparent',
+              color: view === key ? '#ffffff' : 'var(--f1-muted)',
+              boxShadow: 'none',
             }}
           >
             {label}
@@ -1061,11 +1060,11 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
           <button key={t} onClick={() => onTabChange(t)} style={{
             flex: 1, fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
             padding: '9px 0', textAlign: 'center',
-            background: activeTab === t ? 'var(--f1-card-raised)' : 'transparent',
-            color: activeTab === t ? 'var(--f1-text)' : 'var(--f1-muted)',
-            border: activeTab === t ? '1px solid var(--f1-border-light)' : '1px solid transparent',
+            background: activeTab === t ? 'var(--f1-red)' : 'transparent',
+            color: activeTab === t ? '#ffffff' : 'var(--f1-muted)',
+            border: 'none',
             borderRadius: 'var(--radius-sm)',
-            cursor: 'pointer', transition: 'all 0.15s',
+            cursor: 'pointer', transition: 'background 0.15s, color 0.15s',
           }}>
             {t === 'drivers' ? 'Kørere' : 'Konstruktører'}
           </button>
