@@ -182,7 +182,7 @@ export default function Home() {
       <nav style={{ background: 'var(--f1-dark)', borderBottom: '1px solid var(--f1-border)' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', padding: '0 16px', display: 'flex', gap: '4px' }}>
           {(['next', 'calendar', 'standings'] as Tab[]).map(tab => {
-            const labels: Record<Tab, string> = { next: 'Næste', calendar: 'Kalender', standings: 'Standings' };
+            const labels: Record<Tab, string> = { next: 'Næste', calendar: 'Kalender', standings: 'Klassement' };
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
@@ -633,7 +633,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
   onTabChange: (t: StandingsTab) => void;
 }) {
   const posColor = (i: number) =>
-    i === 0 ? 'var(--f1-gold)' : i === 1 ? 'var(--f1-silver)' : i === 2 ? 'var(--f1-bronze)' : 'var(--f1-border-light)';
+    i === 0 ? 'var(--f1-gold)' : i === 1 ? 'var(--f1-silver)' : i === 2 ? 'var(--f1-bronze)' : null;
 
   return (
     <div className="animate-fade-in">
@@ -655,33 +655,103 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {(activeTab === 'drivers' ? drivers : constructors).map((s, i) => {
-          const isDriver = activeTab === 'drivers';
-          const ds = s as F1DriverStanding;
-          const cs = s as F1ConstructorStanding;
+        {activeTab === 'drivers' ? drivers.map((s, i) => {
+          const pc = posColor(i);
+          const teamColor = getTeamColor(s.constructor?.name ?? '');
           return (
             <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: '14px',
-              padding: '13px 18px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '10px 16px 10px 0',
               background: 'var(--f1-card)',
               border: '1px solid var(--f1-border)',
               borderRadius: 'var(--radius-sm)',
-              borderLeft: `3px solid ${posColor(i)}`,
+              borderLeft: `3px solid ${pc ?? teamColor}`,
+              overflow: 'hidden',
             }}>
+              {/* Position */}
               <span style={{
-                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px',
-                color: posColor(i), minWidth: '26px', lineHeight: 1,
+                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '15px',
+                color: pc ?? 'var(--f1-muted)', minWidth: '38px', textAlign: 'center', flexShrink: 0,
               }}>{s.position}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: '14px' }}>
-                  {isDriver ? `${ds.driver.givenName.charAt(0)}. ${ds.driver.familyName}` : cs.constructor.name}
-                </div>
-                {isDriver && (
-                  <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '2px' }}>{ds.constructor?.name}</div>
+
+              {/* Driver photo */}
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
+                overflow: 'hidden',
+                background: `${teamColor}22`,
+                border: `2px solid ${teamColor}55`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {s.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.imageUrl}
+                    alt={s.driver.familyName}
+                    width={44} height={44}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                  />
+                ) : (
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', color: teamColor }}>
+                    {s.driver.code}
+                  </span>
                 )}
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1 }}>{s.points}</div>
+
+              {/* Name + team */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {s.driver.givenName.split(' ').pop()} <span style={{ fontWeight: 700 }}>{s.driver.familyName}</span>
+                </div>
+                <div style={{ marginTop: '3px' }}><TeamBadge name={s.constructor?.name ?? ''} /></div>
+              </div>
+
+              {/* Points */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? 'var(--f1-text)' }}>
+                  {s.points}
+                </div>
+                <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
+              </div>
+            </div>
+          );
+        }) : constructors.map((s, i) => {
+          const pc = posColor(i);
+          const teamColor = getTeamColor(s.constructor?.name ?? '');
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '13px 16px 13px 0',
+              background: 'var(--f1-card)',
+              border: '1px solid var(--f1-border)',
+              borderRadius: 'var(--radius-sm)',
+              borderLeft: `3px solid ${pc ?? teamColor}`,
+            }}>
+              {/* Position */}
+              <span style={{
+                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '15px',
+                color: pc ?? 'var(--f1-muted)', minWidth: '38px', textAlign: 'center', flexShrink: 0,
+              }}>{s.position}</span>
+
+              {/* Team color circle */}
+              <div style={{
+                width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
+                background: `${teamColor}22`,
+                border: `2px solid ${teamColor}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: teamColor }} />
+              </div>
+
+              {/* Team name */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: '14px' }}>{s.constructor.name}</div>
+              </div>
+
+              {/* Points */}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? 'var(--f1-text)' }}>
+                  {s.points}
+                </div>
                 <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
               </div>
             </div>

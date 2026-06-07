@@ -22,6 +22,7 @@ export interface F1DriverStanding {
   position: string;
   points: string;
   wins: string;
+  imageUrl?: string | null;
   driver: {
     driverId: string;
     permanentNumber: string;
