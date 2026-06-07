@@ -823,27 +823,63 @@ function CalendarTab({ upcoming, past, expanded, onToggle }: {
   expanded: number | null;
   onToggle: (r: number | null) => void;
 }) {
+  const [view, setView] = useState<'upcoming' | 'past'>(upcoming.length > 0 ? 'upcoming' : 'past');
+  const races = view === 'upcoming' ? upcoming : [...past].reverse();
+
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {upcoming.map(race => (
-        <RaceRow key={race.round} race={race}
-          expanded={expanded === race.round}
-          onToggle={() => onToggle(expanded === race.round ? null : race.round)}
-          isPast={false} />
-      ))}
-      {past.length > 0 && (
-        <>
-          <div style={{ padding: '16px 4px 6px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--f1-muted)', textTransform: 'uppercase' }}>
-            Afviklede løb
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      {/* Segmented control */}
+      <div style={{
+        display: 'flex',
+        background: 'var(--f1-card)',
+        border: '1px solid var(--f1-border)',
+        borderRadius: 'var(--radius-sm)',
+        padding: '3px',
+        gap: '2px',
+      }}>
+        {([
+          { key: 'upcoming', label: `Kommende · ${upcoming.length}` },
+          { key: 'past',     label: `Afviklede · ${past.length}` },
+        ] as { key: 'upcoming' | 'past'; label: string }[]).map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            style={{
+              flex: 1,
+              padding: '8px 0',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-display)',
+              fontWeight: 600,
+              fontSize: '12px',
+              letterSpacing: '0.02em',
+              transition: 'background 0.15s, color 0.15s',
+              background: view === key ? 'var(--f1-card-raised)' : 'transparent',
+              color: view === key ? 'var(--f1-text)' : 'var(--f1-muted)',
+              boxShadow: view === key ? '0 1px 3px rgba(0,0,0,0.4)' : 'none',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Race list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {races.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--f1-muted)', fontSize: '13px' }}>
+            Ingen løb at vise
           </div>
-          {[...past].reverse().map(race => (
-            <RaceRow key={race.round} race={race}
-              expanded={expanded === race.round}
-              onToggle={() => onToggle(expanded === race.round ? null : race.round)}
-              isPast={true} />
-          ))}
-        </>
-      )}
+        ) : races.map(race => (
+          <RaceRow key={race.round} race={race}
+            expanded={expanded === race.round}
+            onToggle={() => onToggle(expanded === race.round ? null : race.round)}
+            isPast={view === 'past'} />
+        ))}
+      </div>
+
     </div>
   );
 }
