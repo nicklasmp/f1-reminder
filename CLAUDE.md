@@ -82,6 +82,9 @@ Opret to jobs på https://cron-job.org:
 - Race resultater: `https://api.jolpi.ca/ergast/f1/current/last/results.json`
 - Ingen API key nødvendig. Rate limit: ~200 req/time.
 
+## Kodestil og præferencer
+- **Ingen emojis** — brug aldrig emojis i UI, kode, commit-beskeder eller kommentarer. Brug SVG-ikoner, billeder eller ren tekst i stedet.
+
 ## Design system
 Farver defineret som CSS-variabler i globals.css:
 - `--f1-red: #e8002d` (F1 officiel rød)
