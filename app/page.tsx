@@ -939,8 +939,7 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
       <button onClick={onToggle} style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
         padding: '14px 18px', background: 'none', border: 'none',
-        cursor: 'pointer', color: isPast ? 'var(--f1-muted-light)' : 'var(--f1-text)', textAlign: 'left',
-        opacity: isPast && !expanded ? 0.6 : 1,
+        cursor: 'pointer', color: 'var(--f1-text)', textAlign: 'left',
       }}>
         <span style={{
           fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
@@ -955,7 +954,13 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
             {raceDate.toLocaleDateString('da-DK', { day: 'numeric', month: 'long' })}
           </div>
         </div>
-        {race.isSprint && (
+        {isPast ? (
+          <span style={{
+            background: 'rgba(74,222,128,0.12)', color: '#4ade80',
+            fontSize: '10px', fontWeight: 600, padding: '3px 8px',
+            borderRadius: 'var(--radius-pill)', letterSpacing: '0.04em', flexShrink: 0,
+          }}>✓</span>
+        ) : race.isSprint && (
           <span style={{
             background: 'rgba(232,0,45,0.12)', color: 'var(--f1-red)',
             fontSize: '10px', fontWeight: 600, padding: '3px 9px',
@@ -971,7 +976,10 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--f1-border)' }}>
-          {race.sessions.map(session => {
+          {(isPast
+            ? race.sessions.filter(s => s.type === 'qualifying' || s.type === 'race')
+            : race.sessions
+          ).map(session => {
             const sessionPast = new Date(session.time) < now;
             const isOpen = openSession === session.type;
             const results = cache[session.type];
@@ -985,7 +993,6 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
                     padding: '9px 18px 9px 54px',
                     background: isOpen ? 'rgba(255,255,255,0.03)' : 'transparent',
                     borderBottom: '1px solid var(--f1-border)',
-                    opacity: sessionPast && !isOpen ? 0.45 : 1,
                     cursor: sessionPast ? 'pointer' : 'default',
                   }}
                 >
