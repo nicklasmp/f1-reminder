@@ -492,11 +492,6 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
   const raceTime = raceSessionObj ? new Date(raceSessionObj.time) : new Date(race.raceDate + 'T15:00:00Z');
   const daysUntil = Math.ceil((raceTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-  const firstSession = race.sessions[0];
-  const firstSessionTime = firstSession ? new Date(firstSession.time) : null;
-  const daysUntilFirst = firstSessionTime
-    ? Math.ceil((firstSessionTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-    : null;
 
   async function toggleSession(type: string, isPast: boolean) {
     if (!isPast || !race) return;
@@ -625,26 +620,15 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
               </div>
             </div>
             <div style={{
-              background: 'rgba(232,0,45,0.1)', border: '1px solid rgba(232,0,45,0.25)',
+              background: 'var(--f1-red)',
               borderRadius: 'var(--radius-sm)', padding: '10px 14px', textAlign: 'center', minWidth: '72px',
             }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2.2rem', lineHeight: 1, color: 'var(--f1-red)' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2.2rem', lineHeight: 1, color: '#fff' }}>
                 {daysUntil}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--f1-red)', fontWeight: 500, opacity: 0.8, marginTop: '3px', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: 500, marginTop: '3px', whiteSpace: 'nowrap' }}>
                 {daysUntil === 1 ? 'dag til race' : 'dage til race'}
               </div>
-              {daysUntilFirst !== null && daysUntilFirst > 0 && daysUntilFirst < daysUntil && (
-                <>
-                  <div style={{ borderTop: '1px solid rgba(232,0,45,0.2)', margin: '8px 0 6px' }} />
-                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.1rem', lineHeight: 1, color: 'rgba(232,0,45,0.55)' }}>
-                    {daysUntilFirst}
-                  </div>
-                  <div style={{ fontSize: '10px', color: 'rgba(232,0,45,0.45)', fontWeight: 500, marginTop: '2px', whiteSpace: 'nowrap' }}>
-                    {daysUntilFirst === 1 ? 'dag til træning' : 'dage til træning'}
-                  </div>
-                </>
-              )}
             </div>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--f1-muted)', marginBottom: '18px' }}>
