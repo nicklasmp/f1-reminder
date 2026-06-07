@@ -1121,27 +1121,32 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
               }}>{s.position}</span>
 
               {/* Driver photo */}
-              <div style={{
-                width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
-                overflow: 'hidden',
-                background: `${teamColor}22`,
-                border: `2px solid ${teamColor}55`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                {s.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={s.imageUrl}
-                    alt={s.driver.familyName}
-                    width={44} height={44}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
-                  />
-                ) : (
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', color: teamColor }}>
-                    {s.driver.code}
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const photo = getF1DriverPhoto(s.driver.givenName, s.driver.familyName, s.constructor?.name ?? '');
+                return (
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
+                    overflow: 'hidden',
+                    background: `${teamColor}22`,
+                    border: `2px solid ${teamColor}55`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photo}
+                        alt={s.driver.familyName}
+                        width={44} height={44}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                      />
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', color: teamColor }}>
+                        {s.driver.code}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Name + team */}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1234,10 +1239,10 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Maps team name → official F1 CDN white logo URL */
-function getF1TeamLogo(name: string): string | null {
+/** Maps team name → F1 CDN slug used for logos and driver photos */
+function getF1TeamSlug(name: string): string | null {
   const n = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const slugMap: [string, string][] = [
+  const map: [string, string][] = [
     ['ferrari',      'ferrari'],
     ['redbull',      'redbullracing'],
     ['mclaren',      'mclaren'],
@@ -1248,33 +1253,52 @@ function getF1TeamLogo(name: string): string | null {
     ['williams',     'williams'],
     ['haas',         'haasf1team'],
     ['racingbulls',  'racingbulls'],
+    ['rbf1',         'racingbulls'],   // "RB F1 Team" → rbf1team
     ['alphatauri',   'racingbulls'],
     ['sauber',       'audi'],
     ['audi',         'audi'],
+    ['kick',         'audi'],
     ['cadillac',     'cadillac'],
   ];
-  for (const [key, slug] of slugMap) {
-    if (n.includes(key)) {
-      return `https://media.formula1.com/image/upload/c_lfill,w_80/q_auto/v1740000001/common/f1/2026/${slug}/2026${slug}logowhite.webp`;
-    }
+  for (const [key, slug] of map) {
+    if (n.includes(key)) return slug;
   }
   return null;
+}
+
+/** Official F1 CDN white team logo */
+function getF1TeamLogo(name: string): string | null {
+  const slug = getF1TeamSlug(name);
+  if (!slug) return null;
+  return `https://media.formula1.com/image/upload/c_lfill,w_80/q_auto/v1740000001/common/f1/2026/${slug}/2026${slug}logowhite.webp`;
+}
+
+/** Official F1 CDN driver headshot — falls back to silhouette if not found */
+function getF1DriverPhoto(givenName: string, familyName: string, constructorName: string): string | null {
+  const slug = getF1TeamSlug(constructorName);
+  if (!slug) return null;
+  // Strip accents (handles Pérez → per, Hülkenberg → hul), take first 3 chars
+  const norm3 = (s: string) =>
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '').slice(0, 3);
+  const code = norm3(givenName) + norm3(familyName) + '01';
+  return `https://media.formula1.com/image/upload/c_lfill,w_140/q_auto/d_common:f1:2026:fallback:driver:2026fallbackdriverright.webp/v1740000001/common/f1/2026/${slug}/${code}/2026${slug}${code}right.webp`;
 }
 
 /** Maps team name or constructorId → official livery colour */
 function getTeamColor(name: string): string {
   const n = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (n.includes('ferrari'))                               return '#E8002D';
-  if (n.includes('redbull') || n.includes('red_bull'))     return '#3671C6';
-  if (n.includes('mercedes'))                              return '#27F4D2';
-  if (n.includes('mclaren'))                               return '#FF8000';
-  if (n.includes('astonmartin') || n.includes('aston'))    return '#358C75';
-  if (n.includes('alpine'))                                return '#FF87BC';
-  if (n.includes('williams'))                              return '#64C4FF';
-  if (n.includes('haas'))                                  return '#B6BABD';
+  if (n.includes('ferrari'))                                            return '#E8002D';
+  if (n.includes('redbull') || n.includes('red_bull'))                  return '#3671C6';
+  if (n.includes('mercedes'))                                           return '#27F4D2';
+  if (n.includes('mclaren'))                                            return '#FF8000';
+  if (n.includes('astonmartin') || n.includes('aston'))                 return '#358C75';
+  if (n.includes('alpine'))                                             return '#FF87BC';
+  if (n.includes('williams'))                                           return '#64C4FF';
+  if (n.includes('haas'))                                               return '#B6BABD';
   if (n.includes('sauber') || n.includes('audi') || n.includes('kick')) return '#52E252';
-  if (n.includes('racingbulls') || n.includes('alphatauri') || n === 'rb') return '#6692FF';
-  return '#555';
+  if (n.includes('racingbulls') || n.includes('rbf1') || n.includes('alphatauri') || n === 'rb') return '#6692FF';
+  if (n.includes('cadillac'))                                           return '#003DA5';
+  return '#555555'; // 6-char so opacity suffix (#55555522) stays valid
 }
 
 function TeamBadge({ name }: { name: string }) {

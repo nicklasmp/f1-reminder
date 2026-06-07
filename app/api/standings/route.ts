@@ -1,43 +1,13 @@
 import { NextResponse } from 'next/server';
 import { fetchDriverStandings, fetchConstructorStandings } from '@/lib/f1-api';
-import { F1DriverStanding, F1ConstructorStanding } from '@/types/f1';
-
-/** Fetch a Wikipedia thumbnail using any Wikipedia page URL */
-async function fetchWikiImage(wikiUrl: string): Promise<string | null> {
-  try {
-    const title = decodeURIComponent(wikiUrl.split('/wiki/')[1] ?? '');
-    if (!title) return null;
-
-    const res = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`,
-      { next: { revalidate: 86400 } }
-    );
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    const src: string | undefined = data?.thumbnail?.source;
-    return src ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export async function GET() {
   try {
-    const [rawDrivers, rawConstructors] = await Promise.all([
+    const [drivers, constructors] = await Promise.all([
       fetchDriverStandings('current'),
       fetchConstructorStandings('current'),
     ]);
-
-    // Enrich drivers with Wikipedia photos (cached 24 h); constructor logos come from F1 CDN client-side
-    const drivers = await Promise.all(
-      rawDrivers.map(async (s): Promise<F1DriverStanding> => ({
-        ...s,
-        imageUrl: await fetchWikiImage((s.driver as unknown as Record<string, string>).url ?? ''),
-      }))
-    );
-    const constructors: F1ConstructorStanding[] = rawConstructors;
-
+    // Photos and logos are resolved client-side from the F1 CDN
     return NextResponse.json({ drivers, constructors });
   } catch (err) {
     console.error('Standings API error:', err);
