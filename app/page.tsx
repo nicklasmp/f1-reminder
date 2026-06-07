@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult } from '@/types/f1';
-import { formatSessionTime, formatSessionDate, getFlagForCountry } from '@/lib/f1-api';
+import { formatSessionTime, formatSessionDate } from '@/lib/f1-api';
 
 type Tab = 'next' | 'calendar' | 'standings';
 type StandingsTab = 'drivers' | 'constructors';
@@ -483,7 +483,6 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
     );
   }
 
-  const flag = getFlagForCountry(race.country);
   const raceSessionObj = race.sessions.find(s => s.type === 'race');
   const raceTime = raceSessionObj ? new Date(raceSessionObj.time) : new Date(race.raceDate + 'T15:00:00Z');
   const daysUntil = Math.ceil((raceTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -553,8 +552,9 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
               <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--f1-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '5px' }}>
                 Seneste løb · Runde {lastRace.round}
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>
-                {getFlagForCountry(lastRace.country)} {lastRace.country} Grand Prix
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CountryFlag country={lastRace.country} size={22} />
+                {lastRace.country} Grand Prix
               </div>
             </div>
             <span style={{
@@ -605,8 +605,9 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--f1-red)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 Runde {race.round} af {totalRounds} · 2026
               </div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2rem', lineHeight: 1.1, margin: 0 }}>
-                {flag} {race.country}
+              <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2rem', lineHeight: 1.1, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <CountryFlag country={race.country} size={32} />
+                {race.country}
               </h1>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: '1rem', color: 'var(--f1-muted-light)', marginTop: '3px' }}>
                 Grand Prix
@@ -912,7 +913,6 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
   const [cache, setCache] = useState<Record<string, SessionResults>>({});
   const [loadingSession, setLoadingSession] = useState<string | null>(null);
 
-  const flag = getFlagForCountry(race.country);
   const raceDate = new Date(race.raceDate);
   const now = new Date();
 
@@ -970,7 +970,10 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
           {String(race.round).padStart(2, '0')}
         </span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--f1-text)' }}>{flag} {race.country}</div>
+          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--f1-text)', display: 'flex', alignItems: 'center', gap: '7px' }}>
+            <CountryFlag country={race.country} size={18} />
+            {race.country}
+          </div>
           <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '1px' }}>{race.circuitName}</div>
           <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '1px' }}>
             {raceDate.toLocaleDateString('da-DK', { day: 'numeric', month: 'long' })}
@@ -1318,6 +1321,47 @@ function TeamBadge({ name }: { name: string }) {
         {name}
       </span>
     </span>
+  );
+}
+
+/** ISO 3166-1 alpha-2 code for a race-hosting country name */
+function getCountryCode(country: string): string | null {
+  const n = country.toLowerCase();
+  if (n.includes('australia'))      return 'au';
+  if (n.includes('bahrain'))        return 'bh';
+  if (n.includes('saudi'))          return 'sa';
+  if (n.includes('japan'))          return 'jp';
+  if (n.includes('china'))          return 'cn';
+  if (n.includes('monaco'))         return 'mc';
+  if (n.includes('canada'))         return 'ca';
+  if (n.includes('spain'))          return 'es';
+  if (n.includes('austria'))        return 'at';
+  if (n.includes('great britain') || n.includes('united kingdom')) return 'gb';
+  if (n.includes('belgium'))        return 'be';
+  if (n.includes('hungary'))        return 'hu';
+  if (n.includes('netherlands'))    return 'nl';
+  if (n.includes('italy'))          return 'it';
+  if (n.includes('azerbaijan'))     return 'az';
+  if (n.includes('singapore'))      return 'sg';
+  if (n.includes('brazil'))         return 'br';
+  if (n.includes('mexico'))         return 'mx';
+  if (n.includes('abu dhabi') || n.includes('united arab')) return 'ae';
+  if (n.includes('united states') || n.includes('usa') || n.includes('miami') || n.includes('las vegas')) return 'us';
+  return null;
+}
+
+function CountryFlag({ country, size = 20 }: { country: string; size?: number }) {
+  const code = getCountryCode(country);
+  if (!code) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`https://flagcdn.com/${code}.svg`}
+      alt={country}
+      width={size}
+      height={Math.round(size * 0.67)}
+      style={{ display: 'inline-block', verticalAlign: 'middle', borderRadius: '2px', flexShrink: 0 }}
+    />
   );
 }
 
