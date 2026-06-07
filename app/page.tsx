@@ -614,18 +614,54 @@ function CalendarTab({ upcoming, past, expanded, onToggle }: {
 function RaceRow({ race, expanded, onToggle, isPast }: {
   race: F1Race; expanded: boolean; onToggle: () => void; isPast: boolean;
 }) {
+  const [openSession, setOpenSession] = useState<string | null>(null);
+  const [cache, setCache] = useState<Record<string, SessionResults>>({});
+  const [loadingSession, setLoadingSession] = useState<string | null>(null);
+
   const flag = getFlagForCountry(race.country);
   const raceDate = new Date(race.raceDate);
+  const now = new Date();
+
+  async function toggleSession(type: string, sessionTime: string) {
+    if (new Date(sessionTime) >= now) return;
+    if (openSession === type) { setOpenSession(null); return; }
+    setOpenSession(type);
+    if (cache[type] !== undefined) return;
+
+    const isPractice = type === 'fp1' || type === 'fp2' || type === 'fp3';
+    const apiType =
+      type === 'qualifying' || type === 'sprint_qualifying' ? 'qualifying' :
+      type === 'sprint' ? 'sprint' :
+      type === 'race' ? 'race' : null;
+
+    setLoadingSession(type);
+    try {
+      const url = isPractice
+        ? `/api/practice-results?round=${race.round}&session=${type}`
+        : apiType
+          ? `/api/results?round=${race.round}&type=${apiType}`
+          : null;
+      if (!url) { setCache(c => ({ ...c, [type]: 'unavailable' })); return; }
+      const res = await fetch(url);
+      const data = await res.json();
+      setCache(c => ({ ...c, [type]: data.results ?? 'unavailable' }));
+    } catch {
+      setCache(c => ({ ...c, [type]: 'unavailable' }));
+    } finally {
+      setLoadingSession(null);
+    }
+  }
 
   return (
     <div style={{
       background: 'var(--f1-card)', border: '1px solid var(--f1-border)',
-      borderRadius: 'var(--radius)', overflow: 'hidden', opacity: isPast ? 0.5 : 1,
+      borderRadius: 'var(--radius)', overflow: 'hidden',
     }}>
       <button onClick={onToggle} style={{
         width: '100%', display: 'flex', alignItems: 'center', gap: '14px',
         padding: '14px 18px', background: 'none', border: 'none',
-        cursor: 'pointer', color: 'var(--f1-text)', textAlign: 'left',
+        cursor: 'pointer', color: isPast ? 'var(--f1-muted-light)' : 'var(--f1-text)', textAlign: 'left',
+        opacity: isPast && !expanded ? 0.6 : 1,
       }}>
         <span style={{
           fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
@@ -634,8 +670,9 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
           {String(race.round).padStart(2, '0')}
         </span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: '14px' }}>{flag} {race.country}</div>
-          <div style={{ fontSize: '12px', color: 'var(--f1-muted)', marginTop: '2px' }}>
+          <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--f1-text)' }}>{flag} {race.country}</div>
+          <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '1px' }}>{race.circuitName}</div>
+          <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '1px' }}>
             {raceDate.toLocaleDateString('da-DK', { day: 'numeric', month: 'long' })}
           </div>
         </div>
@@ -654,22 +691,66 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
       </button>
 
       {expanded && (
-        <div style={{ borderTop: '1px solid var(--f1-border)', padding: '10px 18px 14px 54px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {race.sessions.map(session => (
-            <div key={session.type} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                <span style={{
-                  fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '10px',
-                  padding: '2px 8px', borderRadius: 'var(--radius-pill)',
-                  background: 'var(--f1-border)', color: 'var(--f1-muted-light)',
-                }}>{sessionCode(session.type)}</span>
-                <span style={{ fontSize: '12px', color: 'var(--f1-muted-light)' }}>{session.label}</span>
+        <div style={{ borderTop: '1px solid var(--f1-border)' }}>
+          {race.sessions.map(session => {
+            const sessionPast = new Date(session.time) < now;
+            const isOpen = openSession === session.type;
+            const results = cache[session.type];
+            const isLoading = loadingSession === session.type;
+            return (
+              <div key={session.type}>
+                <div
+                  onClick={() => toggleSession(session.type, session.time)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '9px 18px 9px 54px',
+                    background: isOpen ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    borderBottom: '1px solid var(--f1-border)',
+                    opacity: sessionPast && !isOpen ? 0.45 : 1,
+                    cursor: sessionPast ? 'pointer' : 'default',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                    <span style={{
+                      fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '10px',
+                      padding: '2px 8px', borderRadius: 'var(--radius-pill)',
+                      background: 'var(--f1-border)', color: 'var(--f1-muted-light)',
+                    }}>{sessionCode(session.type)}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--f1-muted-light)' }}>{session.label}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px' }}>
+                      {formatSessionTime(session.time)}
+                    </span>
+                    {sessionPast && (
+                      <span style={{
+                        color: 'var(--f1-muted)', fontSize: '12px', lineHeight: 1,
+                        transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s',
+                      }}>▾</span>
+                    )}
+                  </div>
+                </div>
+                {isOpen && (
+                  <div style={{ borderBottom: '1px solid var(--f1-border)', background: '#111' }}>
+                    {isLoading && (
+                      <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>Henter resultater…</div>
+                    )}
+                    {!isLoading && results === 'unavailable' && (
+                      <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
+                        <span>ℹ️</span> Resultater ikke tilgængelige endnu
+                      </div>
+                    )}
+                    {!isLoading && Array.isArray(results) && results.length === 0 && (
+                      <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>Ingen resultater endnu</div>
+                    )}
+                    {!isLoading && Array.isArray(results) && results.length > 0 && (
+                      <SessionResultsList type={session.type} results={results} />
+                    )}
+                  </div>
+                )}
               </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px' }}>
-                {formatSessionTime(session.time)}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
