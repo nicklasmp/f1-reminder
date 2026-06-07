@@ -1158,7 +1158,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 
               {/* Points */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? 'var(--f1-text)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? teamColor }}>
                   {s.points}
                 </div>
                 <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
@@ -1183,28 +1183,27 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
                 color: pc ?? 'var(--f1-muted)', minWidth: '38px', textAlign: 'center', flexShrink: 0,
               }}>{s.position}</span>
 
-              {/* Team logo */}
+              {/* Team logo — solid team colour background, white logo on top */}
               {(() => {
                 const logo = getF1TeamLogo(s.constructor?.name ?? '');
                 return (
                   <div style={{
-                    width: '56px', height: '36px', borderRadius: '6px', flexShrink: 0,
-                    background: teamColor + '22',
-                    border: `1px solid ${teamColor}44`,
+                    width: '64px', height: '38px', borderRadius: '6px', flexShrink: 0,
+                    background: teamColor,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     overflow: 'hidden',
-                    padding: '6px 8px',
+                    padding: '6px 10px',
                   }}>
                     {logo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={logo}
                         alt={s.constructor.name}
-                        width={40} height={24}
+                        width={44} height={26}
                         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                       />
                     ) : (
-                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '10px', color: teamColor, textAlign: 'center', lineHeight: 1.1 }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '10px', color: '#fff', textAlign: 'center', lineHeight: 1.1 }}>
                         {s.constructor.name.split(' ').map((w: string) => w[0]).join('').slice(0, 3)}
                       </span>
                     )}
@@ -1224,7 +1223,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 
               {/* Points */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? 'var(--f1-text)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? teamColor }}>
                   {s.points}
                 </div>
                 <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
