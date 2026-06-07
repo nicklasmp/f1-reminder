@@ -14,7 +14,7 @@ export default function Home() {
   const [drivers, setDrivers] = useState<F1DriverStanding[]>([]);
   const [constructors, setConstructors] = useState<F1ConstructorStanding[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported'>('idle');
+  const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported' | 'pwa-only'>('idle');
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [staleData, setStaleData] = useState(false);
@@ -158,6 +158,12 @@ export default function Home() {
   }
 
   function checkPushStatus() {
+    // iOS only supports push in standalone PWA mode (not in Safari/Chrome browser tabs)
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || ('standalone' in navigator && (navigator as Record<string, unknown>).standalone === true);
+    if (isIos && !isStandalone) { setPushStatus('pwa-only'); return; }
+
     if (!('Notification' in window) || !('PushManager' in window)) { setPushStatus('unsupported'); return; }
     if (Notification.permission === 'granted') setPushStatus('subscribed');
     else if (Notification.permission === 'denied') setPushStatus('denied');
@@ -323,6 +329,11 @@ export default function Home() {
           )}
           {pushStatus === 'denied' && (
             <span style={{ color: 'var(--f1-muted)', fontSize: '12px' }}>Blokeret</span>
+          )}
+          {pushStatus === 'pwa-only' && (
+            <span style={{ color: 'var(--f1-muted)', fontSize: '12px', textAlign: 'right', lineHeight: '1.3' }}>
+              Kræver PWA
+            </span>
           )}
         </div>
       </header>
