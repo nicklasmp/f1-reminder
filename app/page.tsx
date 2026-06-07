@@ -89,9 +89,7 @@ export default function Home() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(console.error);
-    }
+    // Service worker is registered automatically by @serwist/next
     checkPushStatus();
   }, []);
 
