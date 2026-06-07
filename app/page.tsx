@@ -112,6 +112,7 @@ export default function Home() {
   const upcomingRaces = schedule.filter(r => getRaceTime(r) >= now);
   const nextRace = upcomingRaces[0] ?? null;
   const pastRaces = schedule.filter(r => getRaceTime(r) < now);
+  const lastRace = pastRaces.length > 0 ? pastRaces[pastRaces.length - 1] : null;
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--f1-black)', color: 'var(--f1-text)' }}>
@@ -207,7 +208,7 @@ export default function Home() {
       <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px' }}>
         {loading ? <LoadingSkeleton /> : (
           <>
-            {activeTab === 'next' && <NextRaceTab race={nextRace} totalRounds={schedule.length} />}
+            {activeTab === 'next' && <NextRaceTab race={nextRace} totalRounds={schedule.length} lastRace={lastRace} />}
             {activeTab === 'calendar' && (
               <CalendarTab upcoming={upcomingRaces} past={pastRaces} expanded={expandedRound} onToggle={setExpandedRound} />
             )}
@@ -225,10 +226,24 @@ export default function Home() {
 
 type SessionResults = F1RaceResult[] | F1QualifyingResult[] | F1PracticeResult[] | 'unavailable' | null;
 
-function NextRaceTab({ race, totalRounds }: { race: F1Race | null; totalRounds: number }) {
+function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; totalRounds: number; lastRace: F1Race | null }) {
   const [openSession, setOpenSession] = useState<string | null>(null);
   const [cache, setCache] = useState<Record<string, SessionResults>>({});
   const [loadingSession, setLoadingSession] = useState<string | null>(null);
+  const [lastRaceResults, setLastRaceResults] = useState<F1RaceResult[] | null>(null);
+
+  const now = new Date();
+  // Hide last race results once the new race weekend's first session begins
+  const weekendStarted = race ? new Date(race.sessions[0]?.time) < now : false;
+  const showLastRace = !weekendStarted && !!lastRace;
+
+  useEffect(() => {
+    if (!showLastRace || !lastRace) return;
+    fetch(`/api/results?round=${lastRace.round}&type=race`)
+      .then(r => r.json())
+      .then(d => setLastRaceResults(d.results ?? null))
+      .catch(() => {});
+  }, [showLastRace, lastRace?.round]);
 
   if (!race) {
     return (
@@ -240,7 +255,6 @@ function NextRaceTab({ race, totalRounds }: { race: F1Race | null; totalRounds: 
   }
 
   const flag = getFlagForCountry(race.country);
-  const now = new Date();
   const raceSessionObj = race.sessions.find(s => s.type === 'race');
   const raceTime = raceSessionObj ? new Date(raceSessionObj.time) : new Date(race.raceDate + 'T15:00:00Z');
   const daysUntil = Math.ceil((raceTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -281,6 +295,36 @@ function NextRaceTab({ race, totalRounds }: { race: F1Race | null; totalRounds: 
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      {/* ── Seneste løb ─────────────────────────────────────────── */}
+      {showLastRace && lastRace && (
+        <div style={{
+          background: 'var(--f1-card)',
+          border: '1px solid var(--f1-border)',
+          borderRadius: 'var(--radius)',
+          overflow: 'hidden',
+        }}>
+          <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--f1-muted), transparent)' }} />
+          <div style={{ padding: '14px 22px 10px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--f1-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '5px' }}>
+              Seneste løb · Runde {lastRace.round}
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>
+              {getFlagForCountry(lastRace.country)} {lastRace.country} Grand Prix
+            </div>
+          </div>
+
+          {!lastRaceResults && (
+            <div style={{ padding: '12px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>
+              Henter resultater…
+            </div>
+          )}
+          {lastRaceResults && (
+            <SessionResultsList type="race" results={lastRaceResults} />
+          )}
+        </div>
+      )}
+
       <div style={{
         background: 'linear-gradient(145deg, #1e1e1e 0%, #161616 100%)',
         border: '1px solid var(--f1-border)',
