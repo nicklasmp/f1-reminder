@@ -1165,16 +1165,21 @@ function getTeamColor(name: string): string {
 function TeamBadge({ name }: { name: string }) {
   const color = getTeamColor(name);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: '5px',
+      background: color + '1e',
+      borderRadius: '100px',
+      padding: '3px 8px 3px 5px',
+    }}>
       <span style={{
-        width: '3px', height: '12px',
-        borderRadius: '2px',
-        background: color,
-        flexShrink: 0,
-        display: 'inline-block',
+        width: '8px', height: '8px', borderRadius: '50%',
+        background: color, flexShrink: 0,
+        boxShadow: `0 0 6px ${color}99`,
       }} />
-      <span style={{ fontSize: '11px', color: 'var(--f1-muted)' }}>{name}</span>
-    </div>
+      <span style={{ fontSize: '11px', color: 'var(--f1-muted-light)', fontWeight: 500, letterSpacing: '0.01em' }}>
+        {name}
+      </span>
+    </span>
   );
 }
 
