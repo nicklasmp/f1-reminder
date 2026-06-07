@@ -46,8 +46,8 @@ export function buildWednesdayMessage(raceName: string, country: string): Notifi
   return {
     title: 'F1 i weekenden!',
     body: `${raceName} kører denne weekend. Sæt dig til rette!`,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-96.png',
+    icon: '/icon',
+    badge: '/icon',
     tag: 'f1-wednesday',
     url: '/',
   };
