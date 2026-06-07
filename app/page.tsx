@@ -1158,7 +1158,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 
               {/* Points */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? teamColor }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: teamColor }}>
                   {s.points}
                 </div>
                 <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
@@ -1223,7 +1223,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 
               {/* Points */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: pc ?? teamColor }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '20px', lineHeight: 1, color: teamColor }}>
                   {s.points}
                 </div>
                 <div style={{ fontSize: '10px', color: 'var(--f1-muted)', marginTop: '2px', letterSpacing: '0.06em' }}>pts</div>
