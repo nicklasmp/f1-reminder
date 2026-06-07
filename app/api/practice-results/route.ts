@@ -36,22 +36,52 @@ export async function GET(request: Request) {
     const year = new Date(race.date).getFullYear();
     const country = race.Circuit?.Location?.country ?? '';
 
-    // 2. Find OpenF1 session key
+    // 2. Find OpenF1 session key — try country_name first, fall back to year-only + date match
+    const raceWeekStart = new Date(race.date);
+    raceWeekStart.setDate(raceWeekStart.getDate() - 6); // fp1 is typically thu or fri
+
     const sessionsRes = await fetch(
-      `${OPENF1_BASE}/sessions?session_name=${encodeURIComponent(sessionName)}&country_name=${encodeURIComponent(country)}&year=${year}`,
+      `${OPENF1_BASE}/sessions?session_name=${encodeURIComponent(sessionName)}&year=${year}`,
       { next: { revalidate: 3600 } }
     );
-    const sessions = await sessionsRes.json();
-    if (!Array.isArray(sessions) || sessions.length === 0) {
+
+    if (sessionsRes.status === 401) {
+      const body = await sessionsRes.json().catch(() => ({}));
+      const isLive = String(body?.detail ?? '').includes('Live');
+      return NextResponse.json({ results: null, reason: isLive ? 'live_session' : 'auth_required' });
+    }
+
+    const allSessions = await sessionsRes.json();
+    if (!Array.isArray(allSessions) || allSessions.length === 0) {
       return NextResponse.json({ results: null });
     }
-    const sessionKey = sessions[0].session_key;
+
+    // Match session closest to race week (same week, same country when possible)
+    const countryLower = country.toLowerCase();
+    let matched = allSessions.find((s: Record<string, string>) =>
+      (s.country_name ?? '').toLowerCase().includes(countryLower) ||
+      countryLower.includes((s.country_name ?? '').toLowerCase())
+    );
+    if (!matched) {
+      // Fall back: find session whose date_start is within 7 days before race date
+      matched = allSessions.find((s: Record<string, string>) => {
+        const d = new Date(s.date_start);
+        return d >= raceWeekStart && d <= new Date(race.date + 'T23:59:59Z');
+      });
+    }
+    if (!matched) return NextResponse.json({ results: null });
+    const sessionKey = matched.session_key;
 
     // 3. Fetch laps + driver info in parallel
     const [lapsRes, driversRes] = await Promise.all([
       fetch(`${OPENF1_BASE}/laps?session_key=${sessionKey}`, { next: { revalidate: 300 } }),
       fetch(`${OPENF1_BASE}/drivers?session_key=${sessionKey}`, { next: { revalidate: 3600 } }),
     ]);
+
+    if (lapsRes.status === 401 || driversRes.status === 401) {
+      return NextResponse.json({ results: null, reason: 'live_session' });
+    }
+
     const laps = await lapsRes.json();
     const drivers = await driversRes.json();
 

@@ -224,7 +224,7 @@ export default function Home() {
 
 // ─── Next Race Tab ────────────────────────────────────────────────────────────
 
-type SessionResults = F1RaceResult[] | F1QualifyingResult[] | F1PracticeResult[] | 'unavailable' | null;
+type SessionResults = F1RaceResult[] | F1QualifyingResult[] | F1PracticeResult[] | 'unavailable' | 'live_session' | null;
 
 function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; totalRounds: number; lastRace: F1Race | null }) {
   const [openSession, setOpenSession] = useState<string | null>(null);
@@ -288,7 +288,13 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
       }
       const res = await fetch(url);
       const data = await res.json();
-      setCache(c => ({ ...c, [type]: data.results ?? 'unavailable' }));
+      if (data.results) {
+        setCache(c => ({ ...c, [type]: data.results }));
+      } else if (data.reason === 'live_session' || data.reason === 'auth_required') {
+        setCache(c => ({ ...c, [type]: 'live_session' }));
+      } else {
+        setCache(c => ({ ...c, [type]: 'unavailable' }));
+      }
     } catch {
       setCache(c => ({ ...c, [type]: 'unavailable' }));
     } finally {
@@ -442,9 +448,14 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
                         Henter resultater…
                       </div>
                     )}
+                    {!isLoading && results === 'live_session' && (
+                      <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>🏎️</span> Utilgængeligt under aktiv F1-session — prøv igen efter løbet
+                      </div>
+                    )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>ℹ️</span> Resultater er ikke tilgængelige endnu
+                        <span>ℹ️</span> Træningsresultater ikke tilgængelige
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
@@ -644,7 +655,13 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
       if (!url) { setCache(c => ({ ...c, [type]: 'unavailable' })); return; }
       const res = await fetch(url);
       const data = await res.json();
-      setCache(c => ({ ...c, [type]: data.results ?? 'unavailable' }));
+      if (data.results) {
+        setCache(c => ({ ...c, [type]: data.results }));
+      } else if (data.reason === 'live_session' || data.reason === 'auth_required') {
+        setCache(c => ({ ...c, [type]: 'live_session' }));
+      } else {
+        setCache(c => ({ ...c, [type]: 'unavailable' }));
+      }
     } catch {
       setCache(c => ({ ...c, [type]: 'unavailable' }));
     } finally {
@@ -735,9 +752,14 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
                     {isLoading && (
                       <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>Henter resultater…</div>
                     )}
+                    {!isLoading && results === 'live_session' && (
+                      <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
+                        <span>🏎️</span> Utilgængeligt under aktiv F1-session — prøv igen efter løbet
+                      </div>
+                    )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
-                        <span>ℹ️</span> Resultater ikke tilgængelige endnu
+                        <span>ℹ️</span> Træningsresultater ikke tilgængelige
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
