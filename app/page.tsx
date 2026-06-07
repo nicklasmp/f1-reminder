@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult } from '@/types/f1';
 import { formatSessionTime, formatSessionDate, getFlagForCountry } from '@/lib/f1-api';
 
@@ -269,7 +269,7 @@ export default function Home() {
 
       {/* Header */}
       <header style={{ background: 'var(--f1-dark)', borderBottom: '1px solid var(--f1-border)' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
               background: 'var(--f1-red)',
@@ -329,33 +329,63 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Nav tabs */}
-      <nav style={{ background: 'var(--f1-dark)', borderBottom: '1px solid var(--f1-border)' }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', padding: '0 16px', display: 'flex', gap: '4px' }}>
-          {(['next', 'calendar', 'standings'] as Tab[]).map(tab => {
-            const labels: Record<Tab, string> = { next: 'Næste', calendar: 'Kalender', standings: 'Klassement' };
+      {/* Bottom tab bar */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+        background: 'var(--f1-dark)',
+        borderTop: '1px solid var(--f1-border)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}>
+        <div style={{ maxWidth: '680px', margin: '0 auto', display: 'flex' }}>
+          {([
+            { tab: 'next',      label: 'Næste',      icon: (active: boolean) => (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            )},
+            { tab: 'calendar',  label: 'Kalender',   icon: (active: boolean) => (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            )},
+            { tab: 'standings', label: 'Klassement', icon: (active: boolean) => (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6"  y1="20" x2="6"  y2="14" />
+              </svg>
+            )},
+          ] as { tab: Tab; label: string; icon: (active: boolean) => React.ReactNode }[]).map(({ tab, label, icon }) => {
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 600,
-                fontSize: '13px',
-                padding: '12px 14px',
-                background: 'none',
-                border: 'none',
-                borderBottom: active ? '2px solid var(--f1-red)' : '2px solid transparent',
-                color: active ? 'var(--f1-text)' : 'var(--f1-muted)',
-                cursor: 'pointer',
-                transition: 'color 0.15s',
+                flex: 1,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: '4px',
+                padding: '10px 0 12px',
+                background: 'none', border: 'none', cursor: 'pointer',
               }}>
-                {labels[tab]}
+                {icon(active)}
+                <span style={{
+                  fontSize: '10px',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: active ? 600 : 400,
+                  color: active ? 'var(--f1-text)' : 'var(--f1-muted)',
+                  letterSpacing: '0.02em',
+                }}>
+                  {label}
+                </span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px' }}>
+      <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px 90px' }}>
         {staleData && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
