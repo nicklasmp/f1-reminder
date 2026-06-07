@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, DM_Sans } from 'next/font/google';
 import { AppSerwistProvider } from './serwist-provider';
+import { UpdateBanner } from './update-banner';
 import './globals.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -50,6 +51,7 @@ export default function RootLayout({
     >
       <body className="antialiased">
         <AppSerwistProvider>{children}</AppSerwistProvider>
+        <UpdateBanner />
       </body>
     </html>
   );

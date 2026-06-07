@@ -12,13 +12,20 @@ declare const self: ServiceWorkerGlobalScope;
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
-  skipWaiting: true,
+  skipWaiting: false,   // wait for user to confirm update via banner
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
 });
 
 serwist.addEventListeners();
+
+// Allow the update banner to trigger activation
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 // ── Push notifications ────────────────────────────────────────────────────────
 
