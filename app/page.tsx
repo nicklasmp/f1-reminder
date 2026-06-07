@@ -491,7 +491,8 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
     if (!isPast || !race) return;
     if (openSession === type) { setOpenSession(null); return; }
     setOpenSession(type);
-    if (cache[type] !== undefined) return;
+    // Don't retry successful results, but do allow retry on unavailable/live_session
+    if (cache[type] !== undefined && cache[type] !== 'unavailable' && cache[type] !== 'live_session') return;
 
     const isPractice = type === 'fp1' || type === 'fp2' || type === 'fp3';
     const apiType =
@@ -680,7 +681,7 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
                     )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '16px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>ℹ️</span> Træningsresultater ikke tilgængelige
+                        <span>ℹ️</span> {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
@@ -862,7 +863,8 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
     if (new Date(sessionTime) >= now) return;
     if (openSession === type) { setOpenSession(null); return; }
     setOpenSession(type);
-    if (cache[type] !== undefined) return;
+    // Don't retry successful results, but do allow retry on unavailable/live_session
+    if (cache[type] !== undefined && cache[type] !== 'unavailable' && cache[type] !== 'live_session') return;
 
     const isPractice = type === 'fp1' || type === 'fp2' || type === 'fp3';
     const apiType =
@@ -984,7 +986,7 @@ function RaceRow({ race, expanded, onToggle, isPast }: {
                     )}
                     {!isLoading && results === 'unavailable' && (
                       <div style={{ padding: '14px 22px', fontSize: '12px', color: 'var(--f1-muted)', display: 'flex', gap: '8px' }}>
-                        <span>ℹ️</span> Træningsresultater ikke tilgængelige
+                        <span>ℹ️</span> {session.type === 'race' || session.type === 'sprint' ? 'Løbsresultater ikke tilgængelige' : session.type === 'qualifying' || session.type === 'sprint_qualifying' ? 'Kvalifikationsresultater ikke tilgængelige' : 'Træningsresultater ikke tilgængelige'}
                       </div>
                     )}
                     {!isLoading && Array.isArray(results) && results.length === 0 && (
