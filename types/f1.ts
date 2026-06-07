@@ -42,6 +42,7 @@ export interface F1ConstructorStanding {
   position: string;
   points: string;
   wins: string;
+  imageUrl?: string | null;
   constructor: {
     constructorId: string;
     name: string;

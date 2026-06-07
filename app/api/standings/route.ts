@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { fetchDriverStandings, fetchConstructorStandings } from '@/lib/f1-api';
-import { F1DriverStanding } from '@/types/f1';
+import { F1DriverStanding, F1ConstructorStanding } from '@/types/f1';
 
-/** Fetch a Wikipedia headshot using the driver's own Wikipedia URL (avoids disambiguation issues) */
-async function fetchDriverImage(wikiUrl: string): Promise<string | null> {
+/** Fetch a Wikipedia thumbnail using any Wikipedia page URL */
+async function fetchWikiImage(wikiUrl: string): Promise<string | null> {
   try {
-    // Extract page title from URL, e.g. "George_Russell_(racing_driver)"
     const title = decodeURIComponent(wikiUrl.split('/wiki/')[1] ?? '');
     if (!title) return null;
 
@@ -17,9 +16,7 @@ async function fetchDriverImage(wikiUrl: string): Promise<string | null> {
 
     const data = await res.json();
     const src: string | undefined = data?.thumbnail?.source;
-    if (!src) return null;
-
-    return src;
+    return src ?? null;
   } catch {
     return null;
   }
@@ -27,18 +24,26 @@ async function fetchDriverImage(wikiUrl: string): Promise<string | null> {
 
 export async function GET() {
   try {
-    const [rawDrivers, constructors] = await Promise.all([
+    const [rawDrivers, rawConstructors] = await Promise.all([
       fetchDriverStandings('current'),
       fetchConstructorStandings('current'),
     ]);
 
-    // Enrich each driver with a Wikipedia headshot (parallel, cached 24 h)
-    const drivers: F1DriverStanding[] = await Promise.all(
-      rawDrivers.map(async (s) => ({
-        ...s,
-        imageUrl: await fetchDriverImage((s.driver as unknown as Record<string, string>).url ?? ''),
-      }))
-    );
+    // Enrich drivers + constructors with Wikipedia images in parallel (cached 24 h)
+    const [drivers, constructors] = await Promise.all([
+      Promise.all(
+        rawDrivers.map(async (s): Promise<F1DriverStanding> => ({
+          ...s,
+          imageUrl: await fetchWikiImage((s.driver as unknown as Record<string, string>).url ?? ''),
+        }))
+      ),
+      Promise.all(
+        rawConstructors.map(async (s): Promise<F1ConstructorStanding> => ({
+          ...s,
+          imageUrl: await fetchWikiImage((s.constructor as unknown as Record<string, string>).url ?? ''),
+        }))
+      ),
+    ]);
 
     return NextResponse.json({ drivers, constructors });
   } catch (err) {

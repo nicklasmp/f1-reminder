@@ -1138,7 +1138,7 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
           return (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: '12px',
-              padding: '13px 16px 13px 0',
+              padding: '12px 16px 12px 0',
               background: 'var(--f1-card)',
               border: '1px solid var(--f1-border)',
               borderRadius: 'var(--radius-sm)',
@@ -1150,19 +1150,38 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
                 color: pc ?? 'var(--f1-muted)', minWidth: '38px', textAlign: 'center', flexShrink: 0,
               }}>{s.position}</span>
 
-              {/* Team color circle */}
+              {/* Team logo */}
               <div style={{
-                width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
-                background: `${teamColor}22`,
-                border: `2px solid ${teamColor}`,
+                width: '52px', height: '36px', borderRadius: '6px', flexShrink: 0,
+                background: '#ffffff',
+                border: `1px solid ${teamColor}44`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                overflow: 'hidden',
+                padding: '3px',
               }}>
-                <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: teamColor }} />
+                {s.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.imageUrl}
+                    alt={s.constructor.name}
+                    width={46} height={30}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '10px', color: teamColor, textAlign: 'center', lineHeight: 1.1 }}>
+                    {s.constructor.name.split(' ').map(w => w[0]).join('').slice(0, 3)}
+                  </span>
+                )}
               </div>
 
-              {/* Team name */}
+              {/* Team name + nationality */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: '14px' }}>{s.constructor.name}</div>
+                <div style={{ fontWeight: 700, fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {s.constructor.name}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--f1-muted)', marginTop: '2px' }}>
+                  {s.constructor.nationality}
+                </div>
               </div>
 
               {/* Points */}
