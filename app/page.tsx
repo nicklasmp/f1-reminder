@@ -1389,7 +1389,9 @@ function CountryFlag({ country, size = 20 }: { country: string; size?: number })
     <img
       src={`https://flagcdn.com/${code}.svg`}
       alt={country}
-      style={{ display: 'inline-block', verticalAlign: 'middle', borderRadius: '2px', flexShrink: 0, width: size, height: Math.round(size * 0.67), objectFit: 'contain' }}
+      width={size}
+      height={Math.round(size * 0.67)}
+      style={{ display: 'inline-block', verticalAlign: 'middle', borderRadius: '2px', flexShrink: 0, objectFit: 'contain' }}
     />
   );
 }
