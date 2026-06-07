@@ -207,7 +207,7 @@ export default function Home() {
       <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px' }}>
         {loading ? <LoadingSkeleton /> : (
           <>
-            {activeTab === 'next' && <NextRaceTab race={nextRace} />}
+            {activeTab === 'next' && <NextRaceTab race={nextRace} totalRounds={schedule.length} />}
             {activeTab === 'calendar' && (
               <CalendarTab upcoming={upcomingRaces} past={pastRaces} expanded={expandedRound} onToggle={setExpandedRound} />
             )}
@@ -225,7 +225,7 @@ export default function Home() {
 
 type SessionResults = F1RaceResult[] | F1QualifyingResult[] | F1PracticeResult[] | 'unavailable' | null;
 
-function NextRaceTab({ race }: { race: F1Race | null }) {
+function NextRaceTab({ race, totalRounds }: { race: F1Race | null; totalRounds: number }) {
   const [openSession, setOpenSession] = useState<string | null>(null);
   const [cache, setCache] = useState<Record<string, SessionResults>>({});
   const [loadingSession, setLoadingSession] = useState<string | null>(null);
@@ -293,7 +293,7 @@ function NextRaceTab({ race }: { race: F1Race | null }) {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
             <div>
               <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--f1-red)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                Runde {race.round} · 2026
+                Runde {race.round} af {totalRounds} · 2026
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '2rem', lineHeight: 1.1, margin: 0 }}>
                 {flag} {race.country}
