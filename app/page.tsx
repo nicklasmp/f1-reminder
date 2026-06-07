@@ -1136,7 +1136,6 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
               background: 'var(--f1-card)',
               border: '1px solid var(--f1-border)',
               borderRadius: 'var(--radius-sm)',
-              borderLeft: `3px solid ${pc ?? teamColor}`,
               overflow: 'hidden',
             }}>
               {/* Position */}
@@ -1200,7 +1199,6 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
               background: 'var(--f1-card)',
               border: '1px solid var(--f1-border)',
               borderRadius: 'var(--radius-sm)',
-              borderLeft: `3px solid ${pc ?? teamColor}`,
             }}>
               {/* Position */}
               <span style={{
