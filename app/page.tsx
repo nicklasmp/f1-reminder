@@ -17,6 +17,9 @@ export default function Home() {
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported'>('idle');
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [staleData, setStaleData] = useState(false);
+
+  const CACHE_KEY = 'f1_app_v2';
 
   // ── Pull-to-refresh ──────────────────────────────────────────────────────────
   const [pullY, setPullY] = useState(0);
@@ -94,9 +97,23 @@ export default function Home() {
 
   useEffect(() => { fetchData(); }, []);
 
+  function applyData(schedule: F1Race[], drivers: F1DriverStanding[], constructors: F1ConstructorStanding[]) {
+    setSchedule(schedule);
+    setDrivers(drivers);
+    setConstructors(constructors);
+    const now = new Date();
+    const getRaceSessionTime = (r: F1Race) => {
+      const rs = r.sessions.find(s => s.type === 'race');
+      return rs ? new Date(rs.time) : new Date(r.raceDate + 'T15:00:00Z');
+    };
+    const next = schedule.find(r => getRaceSessionTime(r) >= now);
+    if (next) setExpandedRound(next.round);
+  }
+
   async function fetchData() {
     setLoading(true);
     setLoadError(false);
+    setStaleData(false);
     try {
       const ctrl = new AbortController();
       const timeout = setTimeout(() => ctrl.abort(), 12000);
@@ -113,18 +130,29 @@ export default function Home() {
 
       if (!schedule) throw new Error('No schedule data');
 
-      setSchedule(schedule ?? []);
-      setDrivers(drivers ?? []);
-      setConstructors(constructors ?? []);
-      const now = new Date();
-      const getRaceSessionTime = (r: F1Race) => {
-        const rs = r.sessions.find(s => s.type === 'race');
-        return rs ? new Date(rs.time) : new Date(r.raceDate + 'T15:00:00Z');
-      };
-      const next = (schedule ?? []).find((r: F1Race) => getRaceSessionTime(r) >= now);
-      if (next) setExpandedRound(next.round);
+      applyData(schedule, drivers ?? [], constructors ?? []);
+
+      // Save fresh data to localStorage
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ schedule, drivers: drivers ?? [], constructors: constructors ?? [], cachedAt: Date.now() }));
+      } catch { /* storage full or unavailable */ }
+
     } catch (err) {
       console.error(err);
+
+      // Try localStorage fallback
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const cached = JSON.parse(raw);
+          if (cached?.schedule?.length) {
+            applyData(cached.schedule, cached.drivers ?? [], cached.constructors ?? []);
+            setStaleData(true);
+            return;
+          }
+        }
+      } catch { /* no cache */ }
+
       setLoadError(true);
     } finally {
       setLoading(false);
@@ -328,6 +356,20 @@ export default function Home() {
       </nav>
 
       <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px' }}>
+        {staleData && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.2)',
+            borderRadius: 'var(--radius-sm)', padding: '9px 14px', marginBottom: '14px',
+            fontSize: '12px', color: '#c9a800',
+          }}>
+            <span>⚠️ Viser gemt data — ingen forbindelse til serveren</span>
+            <button onClick={() => fetchData()} style={{
+              background: 'none', border: 'none', color: '#c9a800', fontSize: '12px',
+              cursor: 'pointer', fontWeight: 600, padding: '0 0 0 12px',
+            }}>Prøv igen</button>
+          </div>
+        )}
         {loading ? <LoadingSkeleton /> : loadError ? (
           <div style={{ textAlign: 'center', padding: '64px 0 48px' }}>
             <div style={{ fontSize: '2.5rem', marginBottom: '14px' }}>📡</div>

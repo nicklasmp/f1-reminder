@@ -1,6 +1,36 @@
 import { F1Race, F1Session, F1DriverStanding, F1ConstructorStanding, F1RaceResult } from '@/types/f1';
 
 const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1';
+const F1CALENDAR_BASE = 'https://raw.githubusercontent.com/sportstimes/f1/main/_db/f1';
+
+// Static metadata keyed by f1calendar race name
+const RACE_META: Record<string, { country: string; circuitName: string; raceName: string }> = {
+  'Australian':          { country: 'Australia',          circuitName: 'Albert Park Circuit',              raceName: 'Australian Grand Prix' },
+  'Chinese':             { country: 'China',              circuitName: 'Shanghai International Circuit',   raceName: 'Chinese Grand Prix' },
+  'Japanese':            { country: 'Japan',              circuitName: 'Suzuka International Racing Course',raceName: 'Japanese Grand Prix' },
+  'Bahrain':             { country: 'Bahrain',            circuitName: 'Bahrain International Circuit',    raceName: 'Bahrain Grand Prix' },
+  'Saudi Arabian':       { country: 'Saudi Arabia',       circuitName: 'Jeddah Corniche Circuit',          raceName: 'Saudi Arabian Grand Prix' },
+  'Miami':               { country: 'USA',                circuitName: 'Miami International Autodrome',    raceName: 'Miami Grand Prix' },
+  'Emilia Romagna':      { country: 'Italy',              circuitName: 'Autodromo Enzo e Dino Ferrari',    raceName: 'Emilia Romagna Grand Prix' },
+  'Monaco':              { country: 'Monaco',             circuitName: 'Circuit de Monaco',                raceName: 'Monaco Grand Prix' },
+  'Canadian':            { country: 'Canada',             circuitName: 'Circuit Gilles Villeneuve',        raceName: 'Canadian Grand Prix' },
+  'Barcelona-Catalunya': { country: 'Spain',              circuitName: 'Circuit de Barcelona-Catalunya',  raceName: 'Catalan Grand Prix' },
+  'Austrian':            { country: 'Austria',            circuitName: 'Red Bull Ring',                    raceName: 'Austrian Grand Prix' },
+  'British':             { country: 'UK',                 circuitName: 'Silverstone Circuit',              raceName: 'British Grand Prix' },
+  'Belgian':             { country: 'Belgium',            circuitName: 'Circuit de Spa-Francorchamps',    raceName: 'Belgian Grand Prix' },
+  'Hungarian':           { country: 'Hungary',            circuitName: 'Hungaroring',                      raceName: 'Hungarian Grand Prix' },
+  'Dutch':               { country: 'Netherlands',        circuitName: 'Circuit Zandvoort',                raceName: 'Dutch Grand Prix' },
+  'Italian':             { country: 'Italy',              circuitName: 'Autodromo Nazionale Monza',        raceName: 'Italian Grand Prix' },
+  'Spanish':             { country: 'Spain',              circuitName: 'Circuit de Madrid Metropolitano', raceName: 'Spanish Grand Prix' },
+  'Azerbaijan':          { country: 'Azerbaijan',         circuitName: 'Baku City Circuit',                raceName: 'Azerbaijan Grand Prix' },
+  'Singapore':           { country: 'Singapore',          circuitName: 'Marina Bay Street Circuit',        raceName: 'Singapore Grand Prix' },
+  'United States':       { country: 'USA',                circuitName: 'Circuit of the Americas',          raceName: 'United States Grand Prix' },
+  'Mexican':             { country: 'Mexico',             circuitName: 'Autodromo Hermanos Rodriguez',     raceName: 'Mexican Grand Prix' },
+  'Brazilian':           { country: 'Brazil',             circuitName: 'Autodromo Jose Carlos Pace',       raceName: 'Brazilian Grand Prix' },
+  'Las Vegas':           { country: 'USA',                circuitName: 'Las Vegas Strip Circuit',          raceName: 'Las Vegas Grand Prix' },
+  'Qatar':               { country: 'Qatar',              circuitName: 'Lusail International Circuit',     raceName: 'Qatar Grand Prix' },
+  'Abu Dhabi':           { country: 'United Arab Emirates', circuitName: 'Yas Marina Circuit',            raceName: 'Abu Dhabi Grand Prix' },
+};
 
 // Country code mapping for flag emojis
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -32,56 +62,57 @@ export function getSessionLabel(type: string): string {
   return SESSION_LABELS[type] ?? type;
 }
 
-// Fetch full season schedule
+// Fetch full season schedule — uses f1calendar (GitHub CDN, highly reliable)
 export async function fetchSchedule(season: string = 'current'): Promise<F1Race[]> {
-  const res = await fetch(`${JOLPICA_BASE}/${season}.json?limit=30`, {
-    next: { revalidate: 3600 }, // Cache for 1 hour
+  const year = season === 'current' ? new Date().getFullYear() : Number(season);
+  const res = await fetch(`${F1CALENDAR_BASE}/${year}.json`, {
+    next: { revalidate: 3600 },
   });
 
-  if (!res.ok) throw new Error(`Jolpica schedule fetch failed: ${res.status}`);
+  if (!res.ok) throw new Error(`f1calendar fetch failed: ${res.status}`);
 
   const data = await res.json();
-  const races = data?.MRData?.RaceTable?.Races ?? [];
+  const races: Array<{
+    name: string; location: string; round: number;
+    sessions: Record<string, string>;
+  }> = data.races ?? [];
 
-  return races.map((race: Record<string, unknown>): F1Race => {
+  return races.map((race): F1Race => {
+    const meta = RACE_META[race.name] ?? {
+      country: race.location,
+      circuitName: race.location,
+      raceName: `${race.name} Grand Prix`,
+    };
+
+    const s = race.sessions;
     const sessions: F1Session[] = [];
 
-    const fp1 = race.FirstPractice as Record<string, string> | undefined;
-    const fp2 = race.SecondPractice as Record<string, string> | undefined;
-    const fp3 = race.ThirdPractice as Record<string, string> | undefined;
-    const sq = race.SprintQualifying as Record<string, string> | undefined;
-    const sprint = race.Sprint as Record<string, string> | undefined;
-    const qual = race.Qualifying as Record<string, string> | undefined;
+    const add = (type: F1Session['type'], isoTime: string | undefined) => {
+      if (!isoTime) return;
+      sessions.push({ type, label: SESSION_LABELS[type] ?? type, date: isoTime.split('T')[0], time: isoTime });
+    };
 
-    const isSprint = !!(sprint);
+    add('fp1', s.fp1);
+    add('sprint_qualifying', s.sprintQualifying);
+    add('fp2', s.fp2);
+    add('fp3', s.fp3);
+    add('sprint', s.sprint);
+    add('qualifying', s.qualifying);
+    add('race', s.gp);
 
-    if (fp1?.date) sessions.push({ type: 'fp1', label: SESSION_LABELS.fp1, date: fp1.date, time: `${fp1.date}T${fp1.time ?? '00:00:00Z'}` });
-    if (fp2?.date) sessions.push({ type: 'fp2', label: SESSION_LABELS.fp2, date: fp2.date, time: `${fp2.date}T${fp2.time ?? '00:00:00Z'}` });
-    if (sq?.date) sessions.push({ type: 'sprint_qualifying', label: SESSION_LABELS.sprint_qualifying, date: sq.date, time: `${sq.date}T${sq.time ?? '00:00:00Z'}` });
-    if (sprint?.date) sessions.push({ type: 'sprint', label: SESSION_LABELS.sprint, date: sprint.date, time: `${sprint.date}T${sprint.time ?? '00:00:00Z'}` });
-    if (fp3?.date) sessions.push({ type: 'fp3', label: SESSION_LABELS.fp3, date: fp3.date, time: `${fp3.date}T${fp3.time ?? '00:00:00Z'}` });
-    if (qual?.date) sessions.push({ type: 'qualifying', label: SESSION_LABELS.qualifying, date: qual.date, time: `${qual.date}T${qual.time ?? '00:00:00Z'}` });
-
-    sessions.push({
-      type: 'race',
-      label: SESSION_LABELS.race,
-      date: race.date as string,
-      time: `${race.date}T${race.time ?? '00:00:00Z'}`,
-    });
-
-    const circuit = race.Circuit as Record<string, unknown>;
-    const location = circuit?.Location as Record<string, string>;
+    // Sort chronologically
+    sessions.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
 
     return {
-      round: Number(race.round),
-      season: race.season as string,
-      raceName: race.raceName as string,
-      circuitName: circuit?.circuitName as string,
-      locality: location?.locality ?? '',
-      country: location?.country ?? '',
-      raceDate: race.date as string,
+      round: race.round,
+      season: String(year),
+      raceName: meta.raceName,
+      circuitName: meta.circuitName,
+      locality: race.location,
+      country: meta.country,
+      raceDate: s.gp?.split('T')[0] ?? '',
       sessions,
-      isSprint,
+      isSprint: !!(s.sprint || s.sprintQualifying),
     };
   });
 }
