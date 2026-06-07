@@ -3,51 +3,29 @@ import { ImageResponse } from 'next/og';
 export const size = { width: 512, height: 512 };
 export const contentType = 'image/png';
 
+const COLS = 8;
+const SQUARE = 512 / COLS; // 64px
+const ROWS = 2;
+const STRIP_H = SQUARE * ROWS; // 128px
+
 export default function Icon() {
   return new ImageResponse(
     <div
       style={{
-        background: '#0a0a0a',
+        background: '#e8002d',
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '22%',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        justifyContent: 'flex-start',
+        position: 'relative',
       }}
     >
-      {/* Checkered flag accent — top-right corner */}
+      {/* F1 text — fills the top portion */}
       <div
         style={{
-          position: 'absolute',
-          top: 48,
-          right: 48,
-          display: 'flex',
-          flexWrap: 'wrap',
-          width: 80,
-          height: 80,
-          opacity: 0.18,
-        }}
-      >
-        {Array.from({ length: 16 }).map((_, i) => (
-          <div
-            key={i}
-            style={{
-              width: 20,
-              height: 20,
-              background: (Math.floor(i / 4) + (i % 4)) % 2 === 0 ? 'white' : 'transparent',
-            }}
-          />
-        ))}
-      </div>
-
-      {/* F1 pill badge */}
-      <div
-        style={{
-          background: '#e8002d',
-          borderRadius: '32px',
-          width: 340,
-          height: 180,
+          flex: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -56,16 +34,42 @@ export default function Icon() {
         <span
           style={{
             color: 'white',
-            fontSize: 176,
+            fontSize: 260,
             fontWeight: 900,
-            letterSpacing: '-10px',
+            letterSpacing: '-14px',
             lineHeight: 1,
             fontFamily: 'Arial Black, Arial, sans-serif',
-            paddingLeft: 12,
+            paddingLeft: 14,
+            textShadow: '0 4px 32px rgba(0,0,0,0.25)',
           }}
         >
           F1
         </span>
+      </div>
+
+      {/* Checkered finish-line strip */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+          height: `${STRIP_H}px`,
+          flexShrink: 0,
+        }}
+      >
+        {Array.from({ length: ROWS }).map((_, row) => (
+          <div key={row} style={{ display: 'flex', flex: 1 }}>
+            {Array.from({ length: COLS }).map((_, col) => (
+              <div
+                key={col}
+                style={{
+                  flex: 1,
+                  background: (row + col) % 2 === 0 ? 'white' : '#111',
+                }}
+              />
+            ))}
+          </div>
+        ))}
       </div>
     </div>,
     { ...size }
