@@ -456,6 +456,7 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
   const [loadingSession, setLoadingSession] = useState<string | null>(null);
   const [lastRaceResults, setLastRaceResults] = useState<F1RaceResult[] | null>(null);
   const [lastRaceLoading, setLastRaceLoading] = useState(true);
+  const [lastRaceExpanded, setLastRaceExpanded] = useState(false);
 
   const now = new Date();
   // Hide once the new race weekend's first session begins
@@ -463,14 +464,15 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
   const showLastRace = !weekendStarted && !!lastRace;
 
   useEffect(() => {
-    if (!showLastRace || !lastRace) return;
+    if (!showLastRace || !lastRace || !lastRaceExpanded) return;
+    if (lastRaceResults !== null) return; // already loaded
     setLastRaceLoading(true);
     fetch(`/api/results?round=${lastRace.round}&type=race`)
       .then(r => r.json())
       .then(d => setLastRaceResults(d.results ?? null))
       .catch(() => setLastRaceResults(null))
       .finally(() => setLastRaceLoading(false));
-  }, [showLastRace, lastRace?.round]);
+  }, [showLastRace, lastRace?.round, lastRaceExpanded]);
 
   if (!race) {
     return (
@@ -539,35 +541,52 @@ function NextRaceTab({ race, totalRounds, lastRace }: { race: F1Race | null; tot
           overflow: 'hidden',
         }}>
           <div style={{ height: '3px', background: 'linear-gradient(90deg, var(--f1-muted), transparent)' }} />
-          <div style={{ padding: '14px 22px 10px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--f1-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '5px' }}>
-              Seneste løb · Runde {lastRace.round}
-            </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>
-              {getFlagForCountry(lastRace.country)} {lastRace.country} Grand Prix
-            </div>
-          </div>
-
-          {lastRaceLoading && (
-            <div style={{ padding: '12px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>
-              Henter resultater…
-            </div>
-          )}
-          {!lastRaceLoading && !lastRaceResults && (() => {
-            const lastRaceSession = lastRace.sessions.find(s => s.type === 'race');
-            const lastRaceTime = lastRaceSession ? new Date(lastRaceSession.time) : new Date(lastRace.raceDate + 'T15:00:00Z');
-            const hoursAgo = (now.getTime() - lastRaceTime.getTime()) / (1000 * 60 * 60);
-            const msg = hoursAgo < 4
-              ? '🏎️ Løbet er sandsynligvis i gang — resultater snart'
-              : 'ℹ️ Resultater ikke tilgængelige endnu — prøv igen senere';
-            return (
-              <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)' }}>
-                {msg}
+          <button
+            onClick={() => setLastRaceExpanded(e => !e)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '14px 22px', background: 'none', border: 'none', cursor: 'pointer',
+              textAlign: 'left', color: 'var(--f1-text)',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--f1-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '5px' }}>
+                Seneste løb · Runde {lastRace.round}
               </div>
-            );
-          })()}
-          {!lastRaceLoading && lastRaceResults && (
-            <SessionResultsList type="race" results={lastRaceResults} />
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '1.15rem' }}>
+                {getFlagForCountry(lastRace.country)} {lastRace.country} Grand Prix
+              </div>
+            </div>
+            <span style={{
+              color: 'var(--f1-muted)', fontSize: '13px', flexShrink: 0, marginLeft: '12px',
+              transform: lastRaceExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s',
+            }}>▾</span>
+          </button>
+
+          {lastRaceExpanded && (
+            <>
+              {lastRaceLoading && (
+                <div style={{ padding: '12px 22px', fontSize: '12px', color: 'var(--f1-muted)' }}>
+                  Henter resultater…
+                </div>
+              )}
+              {!lastRaceLoading && !lastRaceResults && (() => {
+                const lastRaceSession = lastRace.sessions.find(s => s.type === 'race');
+                const lastRaceTime = lastRaceSession ? new Date(lastRaceSession.time) : new Date(lastRace.raceDate + 'T15:00:00Z');
+                const hoursAgo = (now.getTime() - lastRaceTime.getTime()) / (1000 * 60 * 60);
+                const msg = hoursAgo < 4
+                  ? '🏎️ Løbet er sandsynligvis i gang — resultater snart'
+                  : 'ℹ️ Resultater ikke tilgængelige endnu — prøv igen senere';
+                return (
+                  <div style={{ padding: '12px 22px 16px', fontSize: '12px', color: 'var(--f1-muted)' }}>
+                    {msg}
+                  </div>
+                );
+              })()}
+              {!lastRaceLoading && lastRaceResults && (
+                <SessionResultsList type="race" results={lastRaceResults} />
+              )}
+            </>
           )}
         </div>
       )}
