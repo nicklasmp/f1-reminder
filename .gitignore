@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment variables (ALDRIG commit disse)
+.env.local
+.env
+
+# Vercel
+.vercel
+
+# OS
+.DS_Store
+Thumbs.db
