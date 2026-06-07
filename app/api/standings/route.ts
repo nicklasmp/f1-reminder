@@ -19,8 +19,7 @@ async function fetchDriverImage(wikiUrl: string): Promise<string | null> {
     const src: string | undefined = data?.thumbnail?.source;
     if (!src) return null;
 
-    // Downscale to 80px via Wikipedia's thumbnail URL pattern
-    return src.replace(/\/\d+px-/, '/80px-');
+    return src;
   } catch {
     return null;
   }
