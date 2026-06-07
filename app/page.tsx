@@ -16,6 +16,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported'>('idle');
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   // ── Pull-to-refresh ──────────────────────────────────────────────────────────
   const [pullY, setPullY] = useState(0);
@@ -95,13 +96,23 @@ export default function Home() {
 
   async function fetchData() {
     setLoading(true);
+    setLoadError(false);
     try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 12000);
       const [scheduleRes, standingsRes] = await Promise.all([
-        fetch('/api/schedule'),
-        fetch('/api/standings'),
+        fetch('/api/schedule', { signal: ctrl.signal }),
+        fetch('/api/standings', { signal: ctrl.signal }),
       ]);
+      clearTimeout(timeout);
+
+      if (!scheduleRes.ok || !standingsRes.ok) throw new Error('API error');
+
       const { schedule } = await scheduleRes.json();
       const { drivers, constructors } = await standingsRes.json();
+
+      if (!schedule) throw new Error('No schedule data');
+
       setSchedule(schedule ?? []);
       setDrivers(drivers ?? []);
       setConstructors(constructors ?? []);
@@ -114,6 +125,7 @@ export default function Home() {
       if (next) setExpandedRound(next.round);
     } catch (err) {
       console.error(err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -316,7 +328,28 @@ export default function Home() {
       </nav>
 
       <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px' }}>
-        {loading ? <LoadingSkeleton /> : (
+        {loading ? <LoadingSkeleton /> : loadError ? (
+          <div style={{ textAlign: 'center', padding: '64px 0 48px' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '14px' }}>📡</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 700, marginBottom: '8px' }}>
+              Kunne ikke hente data
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--f1-muted)', marginBottom: '24px' }}>
+              Tjek din forbindelse og prøv igen
+            </div>
+            <button
+              onClick={() => fetchData()}
+              style={{
+                background: 'var(--f1-red)', color: 'white',
+                fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px',
+                padding: '10px 24px', borderRadius: 'var(--radius-pill)',
+                border: 'none', cursor: 'pointer',
+              }}
+            >
+              Prøv igen
+            </button>
+          </div>
+        ) : (
           <>
             {activeTab === 'next' && <NextRaceTab race={nextRace} totalRounds={schedule.length} lastRace={lastRace} />}
             {activeTab === 'calendar' && (
