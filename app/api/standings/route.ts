@@ -29,21 +29,14 @@ export async function GET() {
       fetchConstructorStandings('current'),
     ]);
 
-    // Enrich drivers + constructors with Wikipedia images in parallel (cached 24 h)
-    const [drivers, constructors] = await Promise.all([
-      Promise.all(
-        rawDrivers.map(async (s): Promise<F1DriverStanding> => ({
-          ...s,
-          imageUrl: await fetchWikiImage((s.driver as unknown as Record<string, string>).url ?? ''),
-        }))
-      ),
-      Promise.all(
-        rawConstructors.map(async (s): Promise<F1ConstructorStanding> => ({
-          ...s,
-          imageUrl: await fetchWikiImage((s.constructor as unknown as Record<string, string>).url ?? ''),
-        }))
-      ),
-    ]);
+    // Enrich drivers with Wikipedia photos (cached 24 h); constructor logos come from F1 CDN client-side
+    const drivers = await Promise.all(
+      rawDrivers.map(async (s): Promise<F1DriverStanding> => ({
+        ...s,
+        imageUrl: await fetchWikiImage((s.driver as unknown as Record<string, string>).url ?? ''),
+      }))
+    );
+    const constructors: F1ConstructorStanding[] = rawConstructors;
 
     return NextResponse.json({ drivers, constructors });
   } catch (err) {

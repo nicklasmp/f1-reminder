@@ -868,13 +868,13 @@ function CalendarTab({ upcoming, past, expanded, onToggle }: {
             onClick={() => setView(key)}
             style={{
               flex: 1,
-              padding: '8px 0',
+              padding: '9px 0',
               borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
               fontFamily: 'var(--font-display)',
               fontWeight: 600,
-              fontSize: '12px',
+              fontSize: '13px',
               letterSpacing: '0.02em',
               transition: 'background 0.15s, color 0.15s',
               background: view === key ? 'var(--f1-red)' : 'transparent',
@@ -1179,28 +1179,33 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
               }}>{s.position}</span>
 
               {/* Team logo */}
-              <div style={{
-                width: '52px', height: '36px', borderRadius: '6px', flexShrink: 0,
-                background: '#ffffff',
-                border: `1px solid ${teamColor}44`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                overflow: 'hidden',
-                padding: '3px',
-              }}>
-                {s.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={s.imageUrl}
-                    alt={s.constructor.name}
-                    width={46} height={30}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                ) : (
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '10px', color: teamColor, textAlign: 'center', lineHeight: 1.1 }}>
-                    {s.constructor.name.split(' ').map(w => w[0]).join('').slice(0, 3)}
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const logo = getF1TeamLogo(s.constructor?.name ?? '');
+                return (
+                  <div style={{
+                    width: '56px', height: '36px', borderRadius: '6px', flexShrink: 0,
+                    background: teamColor + '22',
+                    border: `1px solid ${teamColor}44`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden',
+                    padding: '6px 8px',
+                  }}>
+                    {logo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={logo}
+                        alt={s.constructor.name}
+                        width={40} height={24}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                    ) : (
+                      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '10px', color: teamColor, textAlign: 'center', lineHeight: 1.1 }}>
+                        {s.constructor.name.split(' ').map((w: string) => w[0]).join('').slice(0, 3)}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Team name + nationality */}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -1228,6 +1233,33 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Maps team name → official F1 CDN white logo URL */
+function getF1TeamLogo(name: string): string | null {
+  const n = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const slugMap: [string, string][] = [
+    ['ferrari',      'ferrari'],
+    ['redbull',      'redbullracing'],
+    ['mclaren',      'mclaren'],
+    ['mercedes',     'mercedes'],
+    ['astonmartin',  'astonmartin'],
+    ['aston',        'astonmartin'],
+    ['alpine',       'alpine'],
+    ['williams',     'williams'],
+    ['haas',         'haasf1team'],
+    ['racingbulls',  'racingbulls'],
+    ['alphatauri',   'racingbulls'],
+    ['sauber',       'audi'],
+    ['audi',         'audi'],
+    ['cadillac',     'cadillac'],
+  ];
+  for (const [key, slug] of slugMap) {
+    if (n.includes(key)) {
+      return `https://media.formula1.com/image/upload/c_lfill,w_80/q_auto/v1740000001/common/f1/2026/${slug}/2026${slug}logowhite.webp`;
+    }
+  }
+  return null;
+}
 
 /** Maps team name or constructorId → official livery colour */
 function getTeamColor(name: string): string {
