@@ -34,9 +34,9 @@ const RACE_META: Record<string, { country: string; circuitName: string; raceName
 
 // Session label mapping
 const SESSION_LABELS: Record<string, string> = {
-  fp1: 'Fri. Træning 1',
-  fp2: 'Fri. Træning 2',
-  fp3: 'Lør. Træning 3',
+  fp1: 'Træning 1',
+  fp2: 'Træning 2',
+  fp3: 'Træning 3',
   qualifying: 'Kvalifikation',
   sprint: 'Sprint',
   sprint_qualifying: 'Sprint Kvalifikation',
