@@ -46,7 +46,9 @@ export async function GET(request: Request) {
       constructor: r.Constructor,
     }));
 
-    return NextResponse.json({ results });
+    return NextResponse.json({ results }, {
+      headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' },
+    });
   } catch (err) {
     console.error('Results API error:', err);
     return NextResponse.json({ results: null });

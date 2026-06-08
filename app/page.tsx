@@ -1,11 +1,54 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult } from '@/types/f1';
 import { formatSessionTime, formatSessionDate } from '@/lib/f1-api';
 
 type Tab = 'next' | 'calendar' | 'standings';
 type StandingsTab = 'drivers' | 'constructors';
+
+const CACHE_KEY = 'f1_app_v2';
+
+function getRaceTime(race: F1Race) {
+  const raceSession = race.sessions.find(s => s.type === 'race');
+  return raceSession ? new Date(raceSession.time) : new Date(race.raceDate + 'T15:00:00Z');
+}
+
+const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] = [
+  {
+    tab: 'next',
+    label: 'Næste',
+    Icon: ({ active }) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+  },
+  {
+    tab: 'calendar',
+    label: 'Kalender',
+    Icon: ({ active }) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    tab: 'standings',
+    label: 'Klassement',
+    Icon: ({ active }) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6"  y1="20" x2="6"  y2="14" />
+      </svg>
+    ),
+  },
+];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('next');
@@ -13,18 +56,17 @@ export default function Home() {
   const [schedule, setSchedule] = useState<F1Race[]>([]);
   const [drivers, setDrivers] = useState<F1DriverStanding[]>([]);
   const [constructors, setConstructors] = useState<F1ConstructorStanding[]>([]);
+  const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported' | 'pwa-only'>('idle');
   const [expandedRound, setExpandedRound] = useState<number | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [staleData, setStaleData] = useState(false);
 
-  const CACHE_KEY = 'f1_app_v2';
-
   // ── Pull-to-refresh ──────────────────────────────────────────────────────────
-  const [pullY, setPullY] = useState(0);
   const [ptrRefreshing, setPtrRefreshing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const indicatorRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
   const pullYRef = useRef(0);
   const pullActive = useRef(false);
@@ -36,6 +78,26 @@ export default function Home() {
   useEffect(() => {
     fetchDataRef.current = fetchData;
   });
+
+  // Set indicator hidden before first paint so there's no flash
+  useLayoutEffect(() => {
+    const ind = indicatorRef.current;
+    if (!ind) return;
+    ind.style.transform = 'translateX(-50%) translateY(-48px)';
+    ind.style.opacity = '0';
+    ind.style.transition = 'none';
+    ind.style.color = 'var(--f1-muted)';
+  }, []);
+
+  // Animate indicator away when refresh completes
+  useEffect(() => {
+    if (ptrRefreshing) return;
+    const ind = indicatorRef.current;
+    if (!ind) return;
+    ind.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s';
+    ind.style.transform = 'translateX(-50%) translateY(-48px)';
+    ind.style.opacity = '0';
+  }, [ptrRefreshing]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -51,11 +113,26 @@ export default function Home() {
       if (!pullActive.current) return;
       if (window.scrollY > 0) { pullActive.current = false; return; }
       const delta = e.touches[0].clientY - touchStartY.current;
-      if (delta <= 0) { pullYRef.current = 0; setPullY(0); return; }
+      const ind = indicatorRef.current;
+      if (delta <= 0) {
+        pullYRef.current = 0;
+        if (ind) { ind.style.transition = 'none'; ind.style.transform = 'translateX(-50%) translateY(-48px)'; ind.style.opacity = '0'; }
+        return;
+      }
       e.preventDefault();
       const y = Math.min(delta / 2.2, PTR_MAX);
       pullYRef.current = y;
-      setPullY(y);
+      if (ind) {
+        const over = y >= PTR_THRESHOLD;
+        ind.style.transition = 'none';
+        ind.style.transform = `translateX(-50%) translateY(${Math.max(-48, y - 48)}px)`;
+        ind.style.opacity = y > 4 ? '1' : '0';
+        ind.style.color = over ? 'var(--f1-text)' : 'var(--f1-muted)';
+        const arrow = ind.querySelector('.ptr-arrow') as HTMLElement | null;
+        if (arrow) arrow.style.transform = `rotate(${Math.min((y / PTR_THRESHOLD) * 180, 180)}deg)`;
+        const text = ind.querySelector('.ptr-text') as HTMLElement | null;
+        if (text) text.textContent = over ? 'Slip for at opdatere' : 'Træk for at opdatere';
+      }
     };
 
     const onEnd = () => {
@@ -63,15 +140,20 @@ export default function Home() {
       pullActive.current = false;
       const y = pullYRef.current;
       pullYRef.current = 0;
+      const ind = indicatorRef.current;
       if (y >= PTR_THRESHOLD) {
+        if (ind) {
+          ind.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+          ind.style.transform = 'translateX(-50%) translateY(12px)';
+        }
         setPtrRefreshing(true);
-        setPullY(PTR_THRESHOLD);
-        fetchDataRef.current().finally(() => {
-          setPtrRefreshing(false);
-          setPullY(0);
-        });
+        fetchDataRef.current().finally(() => setPtrRefreshing(false));
       } else {
-        setPullY(0);
+        if (ind) {
+          ind.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s';
+          ind.style.transform = 'translateX(-50%) translateY(-48px)';
+          ind.style.opacity = '0';
+        }
       }
     };
 
@@ -96,6 +178,7 @@ export default function Home() {
   useEffect(() => { fetchData(); }, []);
 
   function applyData(schedule: F1Race[], drivers: F1DriverStanding[], constructors: F1ConstructorStanding[]) {
+    setNow(new Date());
     setSchedule(schedule);
     setDrivers(drivers);
     setConstructors(constructors);
@@ -211,41 +294,22 @@ export default function Home() {
     }
   }
 
-  const now = new Date();
-
-  // Use the actual race session time (not just the date) so a race isn't
-  // considered "past" until after its real start time, not midnight UTC.
-  const getRaceTime = (race: F1Race) => {
-    const raceSession = race.sessions.find(s => s.type === 'race');
-    return raceSession ? new Date(raceSession.time) : new Date(race.raceDate + 'T15:00:00Z');
-  };
-
-  const upcomingRaces = schedule.filter(r => getRaceTime(r) >= now);
+  const upcomingRaces = useMemo(() => schedule.filter(r => getRaceTime(r) >= now), [schedule, now]);
+  const pastRaces = useMemo(() => schedule.filter(r => getRaceTime(r) < now), [schedule, now]);
   const nextRace = upcomingRaces[0] ?? null;
-  const pastRaces = schedule.filter(r => getRaceTime(r) < now);
   const lastRace = pastRaces.length > 0 ? pastRaces[pastRaces.length - 1] : null;
-
-  // Pull indicator Y: starts hidden above viewport, slides in as user pulls
-  const indicatorVisible = pullY > 4 || ptrRefreshing;
-  const indicatorTranslateY = ptrRefreshing
-    ? 12
-    : Math.max(-48, pullY - 48);
-  const arrowRotation = Math.min((pullY / PTR_THRESHOLD) * 180, 180);
-  const overThreshold = pullY >= PTR_THRESHOLD;
 
   return (
     <div ref={containerRef} style={{ minHeight: '100dvh', background: 'var(--f1-black)', color: 'var(--f1-text)' }}>
 
-      {/* Pull-to-refresh indicator */}
+      {/* Pull-to-refresh indicator — transform/opacity/transition controlled imperatively */}
       <div
+        ref={indicatorRef}
         aria-hidden="true"
         style={{
           position: 'fixed',
           top: 0,
           left: '50%',
-          transform: `translateX(-50%) translateY(${indicatorTranslateY}px)`,
-          transition: (pullY === 0 || ptrRefreshing) ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s' : 'none',
-          opacity: indicatorVisible ? 1 : 0,
           zIndex: 200,
           display: 'flex',
           alignItems: 'center',
@@ -256,19 +320,17 @@ export default function Home() {
           padding: '7px 16px 7px 12px',
           fontSize: '12px',
           fontFamily: 'var(--font-body)',
-          color: overThreshold || ptrRefreshing ? 'var(--f1-text)' : 'var(--f1-muted)',
           pointerEvents: 'none',
           boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
         }}
       >
         {ptrRefreshing
           ? <span className="ptr-spinner" />
-          : <span className="ptr-arrow" style={{ transform: `rotate(${arrowRotation}deg)` }}>↓</span>
+          : <span className="ptr-arrow">↓</span>
         }
-        {ptrRefreshing
-          ? 'Opdaterer…'
-          : overThreshold ? 'Slip for at opdatere' : 'Træk for at opdatere'
-        }
+        <span className="ptr-text">
+          {ptrRefreshing ? 'Opdaterer…' : 'Træk for at opdatere'}
+        </span>
       </div>
 
       {/* Header */}
@@ -346,29 +408,7 @@ export default function Home() {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', display: 'flex' }}>
-          {([
-            { tab: 'next',      label: 'Næste',      icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            )},
-            { tab: 'standings', label: 'Klassement', icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="20" x2="18" y2="10" />
-                <line x1="12" y1="20" x2="12" y2="4" />
-                <line x1="6"  y1="20" x2="6"  y2="14" />
-              </svg>
-            )},
-            { tab: 'calendar',  label: 'Kalender',   icon: (active: boolean) => (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            )},
-          ] as { tab: Tab; label: string; icon: (active: boolean) => React.ReactNode }[]).map(({ tab, label, icon }) => {
+          {TABS.map(({ tab, label, Icon }) => {
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
@@ -379,7 +419,7 @@ export default function Home() {
                 background: 'none',
                 border: 'none', cursor: 'pointer',
               }}>
-                {icon(active)}
+                <Icon active={active} />
                 <span style={{
                   fontSize: '10px',
                   fontFamily: 'var(--font-body)',
@@ -863,7 +903,10 @@ function CalendarTab({ upcoming, past, expanded, onToggle }: {
   onToggle: (r: number | null) => void;
 }) {
   const [view, setView] = useState<'upcoming' | 'past'>(upcoming.length > 0 ? 'upcoming' : 'past');
-  const races = view === 'upcoming' ? upcoming : [...past].reverse();
+  const races = useMemo(
+    () => view === 'upcoming' ? upcoming : [...past].reverse(),
+    [view, upcoming, past],
+  );
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
