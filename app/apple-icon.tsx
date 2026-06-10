@@ -4,10 +4,10 @@ export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
 export default function AppleIcon() {
-  const CHECKER_H = 15;
+  const CHECKER = 15;
   const COLS = 12; // 180 / 15
   const ROWS = 2;
-  const STRIP_H = CHECKER_H * ROWS;
+  const STRIP_H = CHECKER * ROWS;
 
   const checkers = Array.from({ length: ROWS * COLS }, (_, i) => {
     const row = Math.floor(i / COLS);
@@ -17,8 +17,8 @@ export default function AppleIcon() {
         key={i}
         style={{
           width: 180 / COLS,
-          height: CHECKER_H,
-          background: (row + col) % 2 === 0 ? '#000000' : '#ffffff',
+          height: CHECKER,
+          background: (row + col) % 2 === 0 ? '#ffffff' : '#0a0a0a',
           flexShrink: 0,
         }}
       />
@@ -26,53 +26,63 @@ export default function AppleIcon() {
   });
 
   return new ImageResponse(
-    <div
-      style={{
-        background: '#e8002d',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-      }}
-    >
-      {/* F1 text */}
+    (
       <div
         style={{
-          flex: 1,
+          background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 60%)',
+          width: '100%',
+          height: '100%',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: 'column',
+          alignItems: 'stretch',
         }}
       >
-        <span
+        <div
           style={{
-            color: 'white',
-            fontSize: 88,
-            fontWeight: 900,
-            letterSpacing: '-5px',
-            lineHeight: 1,
-            fontFamily: 'Arial Black, Arial, sans-serif',
-            paddingLeft: 5,
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          F1
-        </span>
-      </div>
+          {/* Speed bars */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 10 }}>
+            <div style={{ width: 105, height: 7, background: '#e8002d', transform: 'skewX(-30deg)' }} />
+            <div style={{ width: 78, height: 7, background: '#e8002d', transform: 'skewX(-30deg) translateX(-14px)', opacity: 0.65 }} />
+          </div>
+          {/* F1 text */}
+          <span
+            style={{
+              color: 'white',
+              fontSize: 76,
+              fontWeight: 900,
+              transform: 'skewX(-12deg)',
+              letterSpacing: '-4px',
+              lineHeight: 1,
+              fontFamily: 'Arial Black, Arial, sans-serif',
+              paddingRight: 6,
+            }}
+          >
+            F1
+          </span>
+        </div>
 
-      {/* Checkered strip */}
-      <div
-        style={{
-          width: '100%',
-          height: STRIP_H,
-          display: 'flex',
-          flexWrap: 'wrap',
-          overflow: 'hidden',
-        }}
-      >
-        {checkers}
+        {/* Red divider + checkered strip */}
+        <div style={{ width: '100%', height: 5, background: '#e8002d', display: 'flex' }} />
+        <div
+          style={{
+            width: '100%',
+            height: STRIP_H,
+            display: 'flex',
+            flexWrap: 'wrap',
+            overflow: 'hidden',
+          }}
+        >
+          {checkers}
+        </div>
       </div>
-    </div>,
+    ),
     { ...size }
   );
 }

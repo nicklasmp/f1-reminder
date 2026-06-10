@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   title: 'F1 Reminder',
   description: 'Gå aldrig glip af et Formel 1 løb igen',
   manifest: '/manifest.json',
+  icons: { icon: '/favicon.svg' },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

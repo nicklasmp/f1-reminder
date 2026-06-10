@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Dark background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#0a0a0a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Speed bars (skewed) -->
+  <rect x="100" y="105" width="290" height="20" rx="2" fill="#e8002d" transform="skewX(-20)"/>
+  <rect x="68" y="136" width="215" height="20" rx="2" fill="#e8002d" opacity="0.6" transform="skewX(-20)"/>
+
+  <!-- F1 text (skewed) -->
+  <g transform="translate(256,310) skewX(-12)">
+    <text
+      text-anchor="middle"
+      dominant-baseline="middle"
+      font-family="Arial Black, Arial, sans-serif"
+      font-weight="900"
+      font-size="230"
+      fill="white"
+      letter-spacing="-12"
+    >F1</text>
+  </g>
+
+  <!-- Red divider -->
+  <rect x="0" y="432" width="512" height="16" fill="#e8002d"/>
+
+  <!-- Checkered strip (2 rows x 16 cols = 32 cells) -->
+  <g transform="translate(0,448)">
+    <!-- Row 1 -->
+    <rect x="0"   y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="32"  y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="64"  y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="96"  y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="128" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="160" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="192" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="224" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="256" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="288" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="320" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="352" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="384" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="416" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <rect x="448" y="0"  width="32" height="32" fill="#ffffff"/>
+    <rect x="480" y="0"  width="32" height="32" fill="#0a0a0a"/>
+    <!-- Row 2 -->
+    <rect x="0"   y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="32"  y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="64"  y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="96"  y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="128" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="160" y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="192" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="224" y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="256" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="288" y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="320" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="352" y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="384" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="416" y="32" width="32" height="32" fill="#ffffff"/>
+    <rect x="448" y="32" width="32" height="32" fill="#0a0a0a"/>
+    <rect x="480" y="32" width="32" height="32" fill="#ffffff"/>
+  </g>
+</svg>
