@@ -1,10 +1,12 @@
+// Deprecated: use /api/send-notifications/weekly and /api/send-notifications/session instead.
+// This combined endpoint caused duplicate Wednesday notifications because both cron jobs
+// (Wednesday 08:00 + hourly) would both trigger the Wednesday check on the same request.
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendPushNotification, buildWednesdayMessage, buildSessionMessage } from '@/lib/push';
 import { fetchSchedule, formatSessionTime, isF1ThisWeekend } from '@/lib/f1-api';
 import { PushSubscriptionData } from '@/types/f1';
 
-// Protect this endpoint with a secret so only cron-job.org can trigger it
 function isAuthorized(req: NextRequest): boolean {
   const secret = req.headers.get('x-cron-secret');
   return secret === process.env.CRON_SECRET;
