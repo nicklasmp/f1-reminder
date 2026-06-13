@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult } from '@/types/f1';
+import { F1Race, F1DriverStanding, F1ConstructorStanding, F1RaceResult, F1QualifyingResult, F1PracticeResult, F1NewsItem } from '@/types/f1';
 import { formatSessionTime, formatSessionDate } from '@/lib/f1-api';
 
-type Tab = 'next' | 'calendar' | 'standings';
+type Tab = 'next' | 'calendar' | 'standings' | 'news';
 type StandingsTab = 'drivers' | 'constructors';
 
 const CACHE_KEY = 'f1_app_v2';
+const NEWS_CACHE_KEY = 'f1_news_v1';
 
 function getRaceTime(race: F1Race) {
   const raceSession = race.sessions.find(s => s.type === 'race');
@@ -48,6 +49,16 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
       </svg>
     ),
   },
+  {
+    tab: 'news',
+    label: 'Nyheder',
+    Icon: ({ active }) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+        <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Home() {
@@ -56,6 +67,9 @@ export default function Home() {
   const [schedule, setSchedule] = useState<F1Race[]>([]);
   const [drivers, setDrivers] = useState<F1DriverStanding[]>([]);
   const [constructors, setConstructors] = useState<F1ConstructorStanding[]>([]);
+  const [news, setNews] = useState<F1NewsItem[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [loading, setLoading] = useState(true);
   const [pushStatus, setPushStatus] = useState<'idle' | 'subscribed' | 'denied' | 'unsupported' | 'pwa-only'>('idle');
@@ -175,7 +189,7 @@ export default function Home() {
     checkPushStatus();
   }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); loadNews(); }, []);
 
   function applyData(schedule: F1Race[], drivers: F1DriverStanding[], constructors: F1ConstructorStanding[]) {
     setNow(new Date());
@@ -237,6 +251,36 @@ export default function Home() {
       setLoadError(true);
     } finally {
       setLoading(false);
+    }
+    // News refreshes alongside core data (e.g. on pull-to-refresh) but never
+    // blocks it — a slow or failed feed must not break the schedule/standings UI.
+    loadNews();
+  }
+
+  async function loadNews() {
+    setNewsError(false);
+    try {
+      const ctrl = new AbortController();
+      const timeout = setTimeout(() => ctrl.abort(), 12000);
+      const res = await fetch('/api/news', { signal: ctrl.signal });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error('News API error');
+      const { news } = await res.json();
+      if (!Array.isArray(news)) throw new Error('No news data');
+      setNews(news);
+      try {
+        localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({ news, cachedAt: Date.now() }));
+      } catch { /* storage full or unavailable */ }
+    } catch (err) {
+      console.error(err);
+      try {
+        const raw = localStorage.getItem(NEWS_CACHE_KEY);
+        const cached = raw ? JSON.parse(raw) : null;
+        if (cached?.news?.length) { setNews(cached.news); return; }
+      } catch { /* no cache */ }
+      setNewsError(true);
+    } finally {
+      setNewsLoading(false);
     }
   }
 
@@ -453,7 +497,9 @@ export default function Home() {
             }}>Prøv igen</button>
           </div>
         )}
-        {loading ? <LoadingSkeleton /> : loadError ? (
+        {activeTab === 'news' ? (
+          <NewsTab items={news} loading={newsLoading} error={newsError} onRetry={loadNews} />
+        ) : loading ? <LoadingSkeleton /> : loadError ? (
           <div style={{ textAlign: 'center', padding: '64px 0 48px' }}>
             <div style={{ marginBottom: '14px', display: 'flex', justifyContent: 'center' }}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#606060" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1297,6 +1343,116 @@ function StandingsTab({ drivers, constructors, activeTab, onTabChange }: {
       </div>
     </div>
   );
+}
+
+// ─── News Tab ─────────────────────────────────────────────────────────────────
+
+function NewsTab({ items, loading, error, onRetry }: {
+  items: F1NewsItem[];
+  loading: boolean;
+  error: boolean;
+  onRetry: () => void;
+}) {
+  if (loading && items.length === 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {[0, 1, 2, 3, 4].map(i => (
+          <div key={i} style={{
+            height: '92px', background: 'var(--f1-card)',
+            borderRadius: 'var(--radius)', border: '1px solid var(--f1-border)',
+            opacity: 1 - i * 0.15,
+          }} />
+        ))}
+      </div>
+    );
+  }
+
+  if (error && items.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '64px 0 48px' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: '17px', fontWeight: 700, marginBottom: '8px' }}>
+          Kunne ikke hente nyheder
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--f1-muted)', marginBottom: '24px' }}>
+          Tjek din forbindelse og prøv igen
+        </div>
+        <button onClick={onRetry} style={{
+          background: 'var(--f1-red)', color: 'white',
+          fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '14px',
+          padding: '10px 24px', borderRadius: 'var(--radius-pill)',
+          border: 'none', cursor: 'pointer',
+        }}>
+          Prøv igen
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {items.map((item, i) => (
+        <a
+          key={item.link + i}
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', gap: '12px',
+            background: 'var(--f1-card)', border: '1px solid var(--f1-border)',
+            borderRadius: 'var(--radius)', overflow: 'hidden',
+            textDecoration: 'none', color: 'var(--f1-text)',
+          }}
+        >
+          {item.image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.image}
+              alt=""
+              width={96}
+              height={96}
+              loading="lazy"
+              onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'flex'; e.currentTarget.style.display = 'none'; }}
+              style={{ width: '96px', height: '96px', objectFit: 'cover', flexShrink: 0, background: 'var(--f1-border)' }}
+            />
+          )}
+          <div style={{ flex: 1, minWidth: 0, padding: '12px 14px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div style={{
+              fontWeight: 600, fontSize: '14px', lineHeight: 1.3,
+              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+              {item.title}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', fontSize: '11px', color: 'var(--f1-muted)' }}>
+              <span style={{
+                fontFamily: 'var(--font-display)', fontWeight: 600,
+                color: 'var(--f1-muted-light)', letterSpacing: '0.02em',
+              }}>{item.source}</span>
+              {item.publishedAt && (
+                <>
+                  <span style={{ opacity: 0.5 }}>·</span>
+                  <span>{timeAgo(item.publishedAt)}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+/** Compact Danish relative time, e.g. "3 t siden", "2 d siden". */
+function timeAgo(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+  const mins = Math.floor((Date.now() - then) / 60000);
+  if (mins < 1) return 'lige nu';
+  if (mins < 60) return `${mins} min siden`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} t siden`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days} d siden`;
+  return new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -112,6 +112,15 @@ export interface F1ResultsData {
   qualifyingResults: F1QualifyingResult[];
 }
 
+export interface F1NewsItem {
+  title: string;
+  link: string;
+  source: string;
+  publishedAt: string; // ISO datetime string, or '' if the feed omitted a date
+  summary?: string;
+  image?: string | null;
+}
+
 export interface PushSubscriptionData {
   id?: string;
   endpoint: string;

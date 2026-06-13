@@ -45,7 +45,7 @@ export async function sendPushNotification(
 export function buildWednesdayMessage(raceName: string, country: string): NotificationPayload {
   return {
     title: 'F1 i weekenden!',
-    body: `${raceName} kører denne weekend. Sæt dig til rette!`,
+    body: `${raceName} kører denne weekend.`,
     icon: '/icon',
     badge: '/icon',
     tag: 'f1-wednesday',
