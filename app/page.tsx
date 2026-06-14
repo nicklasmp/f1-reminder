@@ -478,22 +478,12 @@ export default function Home() {
             return (
               <button key={tab} onClick={() => setActiveTab(tab)} aria-label={label} style={{
                 position: 'relative', zIndex: 1,
-                width: '46px', height: '58px',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'flex-start',
-                paddingTop: '13px', gap: '4px',
+                width: '46px', height: '46px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 background: 'none', border: 'none', cursor: 'pointer',
-                borderRadius: 'var(--radius-pill)',
+                borderRadius: '50%',
               }}>
                 <Icon active={active} />
-                <span style={{
-                  fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
-                  color: '#ffffff',
-                  lineHeight: 1, textTransform: 'uppercase',
-                  opacity: active ? 1 : 0,
-                  transition: 'opacity 0.2s',
-                  userSelect: 'none',
-                }}>{label}</span>
               </button>
             );
           })}
