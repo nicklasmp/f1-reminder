@@ -19,43 +19,65 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
   {
     tab: 'next',
     label: 'Næste',
-    Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
+    Icon: ({ active }) => active ? (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="white"/>
+        <polyline points="12 6.5 12 12 15.5 13.8" stroke="rgba(20,20,22,0.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ) : (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
       </svg>
     ),
   },
   {
     tab: 'calendar',
     label: 'Kalender',
-    Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
+    Icon: ({ active }) => active ? (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="2" fill="white"/>
+        <path d="M16 2v4M8 2v4" stroke="rgba(20,20,22,0.85)" strokeWidth="2" strokeLinecap="round"/>
+        <line x1="3" y1="10" x2="21" y2="10" stroke="rgba(20,20,22,0.85)" strokeWidth="2"/>
+      </svg>
+    ) : (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
       </svg>
     ),
   },
   {
     tab: 'standings',
     label: 'Klassement',
-    Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10" />
-        <line x1="12" y1="20" x2="12" y2="4" />
-        <line x1="6"  y1="20" x2="6"  y2="14" />
+    Icon: ({ active }) => active ? (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+        <rect x="3"  y="12" width="4.5" height="8" rx="1"/>
+        <rect x="9.75" y="7" width="4.5" height="13" rx="1"/>
+        <rect x="16.5" y="3" width="4.5" height="17" rx="1"/>
+      </svg>
+    ) : (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/>
+        <line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6"  y1="20" x2="6"  y2="14"/>
       </svg>
     ),
   },
   {
     tab: 'news',
     label: 'Nyheder',
-    Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
-        <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" />
+    Icon: ({ active }) => active ? (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="2" width="14" height="20" rx="2" fill="white"/>
+        <path d="M9 7h6M9 11h6M9 15h4" stroke="rgba(20,20,22,0.85)" strokeWidth="1.8" strokeLinecap="round"/>
+      </svg>
+    ) : (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2"/>
+        <path d="M9 7h6M9 11h6M9 15h4"/>
       </svg>
     ),
   },
@@ -454,8 +476,8 @@ export default function Home() {
       }}>
         <div style={{
           position: 'relative',
-          display: 'flex', alignItems: 'center', gap: '6px',
-          padding: '8px',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '10px',
           borderRadius: 'var(--radius-pill)',
           background: 'rgba(28,28,30,0.5)',
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -466,11 +488,11 @@ export default function Home() {
         }}>
           {/* Sliding red active indicator — stride = 46px button + 6px gap */}
           <div aria-hidden="true" style={{
-            position: 'absolute', top: '8px', left: '8px',
+            position: 'absolute', top: '10px', left: '10px',
             width: '46px', height: '46px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.18)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
-            transform: `translateX(${TABS.findIndex(t => t.tab === activeTab) * 52}px)`,
+            background: 'rgba(255,255,255,0.14)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
+            transform: `translateX(${TABS.findIndex(t => t.tab === activeTab) * 56}px)`,
             transition: 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
           }} />
           {TABS.map(({ tab, label, Icon }) => {
