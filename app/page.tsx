@@ -488,9 +488,10 @@ export default function Home() {
                 <Icon active={active} />
                 <span style={{
                   fontSize: '9px', fontWeight: 700, letterSpacing: '0.06em',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.35)',
+                  color: '#ffffff',
                   lineHeight: 1, textTransform: 'uppercase',
-                  transition: 'color 0.2s',
+                  opacity: active ? 1 : 0,
+                  transition: 'opacity 0.2s',
                   userSelect: 'none',
                 }}>{label}</span>
               </button>
