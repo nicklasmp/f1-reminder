@@ -473,39 +473,39 @@ export default function Home() {
         left: 0, right: 0, zIndex: 100,
         display: 'flex', justifyContent: 'center',
         pointerEvents: 'none',
+        padding: '0 16px',
       }}>
         <div style={{
-          position: 'relative',
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '10px',
+          display: 'flex', alignItems: 'center',
+          width: '100%', maxWidth: '480px',
+          padding: '6px',
           borderRadius: 'var(--radius-pill)',
-          background: 'rgba(28,28,30,0.5)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.14)',
-          boxShadow: '0 12px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
+          background: 'rgba(22,22,24,0.82)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          boxShadow: '0 12px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.18)',
           pointerEvents: 'auto',
         }}>
-          {/* Sliding red active indicator — stride = 46px button + 6px gap */}
-          <div aria-hidden="true" style={{
-            position: 'absolute', top: '10px', left: '10px',
-            width: '46px', height: '46px', borderRadius: '50%',
-            background: 'rgba(255,255,255,0.14)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
-            transform: `translateX(${TABS.findIndex(t => t.tab === activeTab) * 56}px)`,
-            transition: 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
-          }} />
           {TABS.map(({ tab, label, Icon }) => {
             const active = activeTab === tab;
             return (
               <button key={tab} onClick={() => setActiveTab(tab)} aria-label={label} style={{
-                position: 'relative', zIndex: 1,
-                width: '46px', height: '46px',
+                flex: 1,
+                height: '52px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: 'none', border: 'none', cursor: 'pointer',
-                borderRadius: '50%',
+                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
               }}>
-                <Icon active={active} />
+                <div style={{
+                  width: '50px', height: '50px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  borderRadius: '50%',
+                  background: active ? 'rgba(255,255,255,0.16)' : 'none',
+                  boxShadow: active ? 'inset 0 1px 0 rgba(255,255,255,0.3)' : 'none',
+                  transition: 'background 0.22s, box-shadow 0.22s',
+                }}>
+                  <Icon active={active} />
+                </div>
               </button>
             );
           })}
