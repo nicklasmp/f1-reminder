@@ -20,7 +20,7 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
     tab: 'next',
     label: 'Næste',
     Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
@@ -30,7 +30,7 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
     tab: 'calendar',
     label: 'Kalender',
     Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
         <line x1="16" y1="2" x2="16" y2="6" />
         <line x1="8" y1="2" x2="8" y2="6" />
@@ -42,7 +42,7 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
     tab: 'standings',
     label: 'Klassement',
     Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" />
         <line x1="12" y1="20" x2="12" y2="4" />
         <line x1="6"  y1="20" x2="6"  y2="14" />
@@ -53,7 +53,7 @@ const TABS: { tab: Tab; label: string; Icon: React.FC<{ active: boolean }> }[] =
     tab: 'news',
     label: 'Nyheder',
     Icon: ({ active }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#e8002d' : '#606060'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? '#ffffff' : 'rgba(255,255,255,0.6)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
         <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" />
       </svg>
@@ -344,7 +344,7 @@ export default function Home() {
   const lastRace = pastRaces.length > 0 ? pastRaces[pastRaces.length - 1] : null;
 
   return (
-    <div ref={containerRef} style={{ minHeight: '100dvh', background: 'var(--f1-black)', color: 'var(--f1-text)' }}>
+    <div ref={containerRef} style={{ minHeight: '100dvh', background: 'radial-gradient(120% 80% at 80% 0%, #3a0c16 0%, #1a070c 45%, #0a0a0a 100%)', color: 'var(--f1-text)' }}>
 
       {/* Pull-to-refresh indicator — transform/opacity/transition controlled imperatively */}
       <div
@@ -378,7 +378,7 @@ export default function Home() {
       </div>
 
       {/* Header */}
-      <header style={{ background: 'var(--f1-dark)', borderBottom: '1px solid var(--f1-border)' }}>
+      <header style={{ background: 'transparent' }}>
         <div style={{ maxWidth: '680px', margin: '0 auto', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
@@ -444,42 +444,53 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Bottom tab bar */}
+      {/* Floating glass tab bar */}
       <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-        background: 'var(--f1-dark)',
-        borderTop: '1px solid var(--f1-border)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        position: 'fixed',
+        bottom: 'calc(env(safe-area-inset-bottom) + 18px)',
+        left: 0, right: 0, zIndex: 100,
+        display: 'flex', justifyContent: 'center',
+        pointerEvents: 'none',
       }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', display: 'flex' }}>
+        <div style={{
+          position: 'relative',
+          display: 'flex', alignItems: 'center', gap: '6px',
+          padding: '8px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'rgba(28,28,30,0.5)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: '1px solid rgba(255,255,255,0.14)',
+          boxShadow: '0 12px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2)',
+          pointerEvents: 'auto',
+        }}>
+          {/* Sliding red active indicator — stride = 46px button + 6px gap */}
+          <div aria-hidden="true" style={{
+            position: 'absolute', top: '8px', left: '8px',
+            width: '46px', height: '46px', borderRadius: '50%',
+            background: 'rgba(232,0,45,0.92)',
+            boxShadow: '0 0 18px rgba(232,0,45,0.55), inset 0 1px 0 rgba(255,255,255,0.3)',
+            transform: `translateX(${TABS.findIndex(t => t.tab === activeTab) * 52}px)`,
+            transition: 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
+          }} />
           {TABS.map(({ tab, label, Icon }) => {
             const active = activeTab === tab;
             return (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{
-                flex: 1,
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: '4px',
-                padding: '10px 0 12px',
-                background: 'none',
-                border: 'none', cursor: 'pointer',
+              <button key={tab} onClick={() => setActiveTab(tab)} aria-label={label} style={{
+                position: 'relative', zIndex: 1,
+                width: '46px', height: '46px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none', border: 'none', cursor: 'pointer',
+                borderRadius: '50%',
               }}>
                 <Icon active={active} />
-                <span style={{
-                  fontSize: '10px',
-                  fontFamily: 'var(--font-body)',
-                  fontWeight: active ? 600 : 400,
-                  color: active ? 'var(--f1-text)' : 'var(--f1-muted)',
-                  letterSpacing: '0.02em',
-                }}>
-                  {label}
-                </span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px 90px' }}>
+      <main style={{ maxWidth: '680px', margin: '0 auto', padding: '20px 16px', paddingBottom: 'calc(env(safe-area-inset-bottom) + 104px)' }}>
         {staleData && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
