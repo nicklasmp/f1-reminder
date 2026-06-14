@@ -468,8 +468,8 @@ export default function Home() {
           <div aria-hidden="true" style={{
             position: 'absolute', top: '8px', left: '8px',
             width: '46px', height: '46px', borderRadius: '50%',
-            background: 'rgba(232,0,45,0.92)',
-            boxShadow: '0 0 18px rgba(232,0,45,0.55), inset 0 1px 0 rgba(255,255,255,0.3)',
+            background: 'rgba(255,255,255,0.18)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)',
             transform: `translateX(${TABS.findIndex(t => t.tab === activeTab) * 52}px)`,
             transition: 'transform 0.32s cubic-bezier(0.34,1.56,0.64,1)',
           }} />
